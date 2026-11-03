@@ -116,3 +116,16 @@ For browser tests install Chromium with `npx playwright install --with-deps chro
 ## Accessibility and scope
 
 Dark mode only; large touch targets, labelled fields, keyboard focus rings, live errors, semantic progress, safe text rendering, and reduced-motion support. The app uses Google Fonts with local system fallbacks. No tracking/analytics or external illustration services. V1 intentionally has no mandatory voting, scores, or leaderboard.
+
+## Optional Telegram alerts
+
+The `Telegram project notifications` workflow sends a short Telegram message after this repository's Pages deployment or multiplayer/security workflow completes on `main`, including failures. It does not send messages for all ChatGPT conversations. No message is sent until these repository **Secrets** are configured:
+
+- `TELEGRAM_BOT_TOKEN`: the token for your Telegram bot, created through the verified **@BotFather** account in Telegram.
+- `TELEGRAM_CHAT_ID`: the private chat ID or group ID receiving notifications. Start your bot first; bots cannot initiate a private chat themselves.
+
+Store both under Settings → Secrets and variables → Actions → **Secrets**. Never commit the token or paste it into chat. Obtain your chat ID through your own bot's Telegram `getUpdates` response after sending it `/start`; the account authorization and initial Telegram interaction require you. Once those two secrets exist, notifications run automatically. The sender uses only Python's standard library, keeps credentials out of logs, and skips cleanly when unconfigured.
+
+## Opt-in live multiplayer check
+
+`npm run test:live` runs the three-identity round test against the deployed site, without emulators. It creates real anonymous Firebase accounts and a real room that expires after 12 hours. Override `SQ_LIVE_URL` for another deployment, retaining its trailing slash. TLS verification stays enabled. The test uses the configured HTTPS proxy when present; managed test environments must trust their provided proxy CA in the browser.

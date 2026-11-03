@@ -46,3 +46,11 @@ Use at least three **different phones or isolated browser profiles**. Do not use
 14. **Subpath/deep links:** Open `/sneaky-queries/?room=CODE` directly on a fresh phone; refresh in each phase. Confirm assets load from `/sneaky-queries/`, not `/assets/`. Verify HTTPS clipboard/share fallback.
 
 Record device/OS/browser versions, date, Firebase project, deployed commit, pass/fail, and any console errors before claiming cross-device production verification.
+
+## Live deployment follow-up
+
+GitHub Pages was enabled with GitHub Actions as the source. The [Pages deployment workflow](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41662203992) succeeded and the published `/sneaky-queries/` app loaded over HTTPS. The latest implementation also passed [the full GitHub Actions checks](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41658405940).
+
+A production-browser round check was attempted with three isolated contexts. After resolving the managed environment's browser CA trust, the test loaded the app but could not create a party: the deployed build had all five Firebase web configuration values missing and displayed the explicit setup screen. No live multiplayer success is claimed. The user clarified that only GitHub Actions had been configured. Firebase project/account access is still required; the discovered Firebase integration was offered for account authorization. Physical phones remain untested.
+
+Telegram completion alerts are prepared for deployments and test workflows, but no bot credentials or recipient have been configured and no Telegram message has been sent.

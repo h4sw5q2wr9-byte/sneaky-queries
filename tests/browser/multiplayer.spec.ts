@@ -18,7 +18,7 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
   const errors: string[] = [];
   pages.forEach((p) => p.on("pageerror", (e) => errors.push(e.message)));
   try {
-    await host.goto("/");
+    await host.goto("./");
     await expect(
       host.getByRole("heading", { name: "Same friends. Different questions." }),
     ).toBeVisible();
@@ -38,7 +38,7 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
       [alice, "Alice"],
       [bob, "Bob"],
     ] as const) {
-      await page.goto(`/?room=${code}`);
+      await page.goto(`./?room=${code}`);
       await page.getByRole("textbox", { name: "Your nickname" }).fill(name);
       await page.getByRole("button", { name: "I’m in", exact: true }).click();
       await expect(page.locator(".room-code")).toHaveText(code);
@@ -166,7 +166,7 @@ test("host loss, takeover, removal, and refilling a vacated seat do not strand a
     contexts.map((c) => c.newPage()),
   );
   try {
-    await host.goto("/");
+    await host.goto("./");
     await host
       .getByRole("button", { name: "Create a party", exact: true })
       .click();
@@ -181,12 +181,12 @@ test("host loss, takeover, removal, and refilling a vacated seat do not strand a
       [alice, "Alice"],
       [bob, "Bob"],
     ] as const) {
-      await page.goto(`/?room=${code}`);
+      await page.goto(`./?room=${code}`);
       await page.getByRole("textbox", { name: "Your nickname" }).fill(name);
       await page.getByRole("button", { name: "I’m in", exact: true }).click();
       await expect(page.locator(".room-code")).toHaveText(code);
     }
-    await charlie.goto(`/?room=${code}`);
+    await charlie.goto(`./?room=${code}`);
     await charlie
       .getByRole("textbox", { name: "Your nickname" })
       .fill("Charlie");
