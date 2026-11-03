@@ -630,6 +630,9 @@ export default function App() {
                 {t("lockAnswer")}
               </Button>
               <p className="field-hint center">{t("answerHint")}</p>
+              <div className="round-progress" aria-live="polite">
+                {completed}/{count} {t("submitted")}
+              </div>
             </form>
           ) : (
             <div className="panel waiting-panel">
@@ -675,6 +678,15 @@ export default function App() {
               </summary>
               <p className="field-hint">{t("missingPlayers")}</p>
               {playerList(true)}
+              {completed === count && (
+                <button
+                  className="text-button"
+                  disabled={pending || !connected}
+                  onClick={() => void act(() => api.finishAnswers(roomCode))}
+                >
+                  {t("tryAgain")}
+                </button>
+              )}
               <button
                 className="text-button"
                 onClick={() =>
@@ -742,7 +754,7 @@ export default function App() {
             <Mask />
           </div>
           <Title
-            eyebrow={`${t("round")} ${meta.round} · REVEAL`}
+            eyebrow={`${t("round")} ${meta.round} · ${t("revealLabel")}`}
             title={t("revealTitle")}
             sub={t("revealSub")}
           />
@@ -880,11 +892,11 @@ export default function App() {
                 <i />
                 <i />
               </div>
-              <span className="card-bottom">SOMETHING SEEMS OFF.</span>
+              <span className="card-bottom">{t("cardTagline")}</span>
             </div>
             <div className="floating-bubble bubble-one">👀</div>
             <div className="floating-bubble bubble-two">🤔</div>
-            <span className="art-scribble">who, me?</span>
+            <span className="art-scribble">{t("whoMe")}</span>
           </div>
         </section>
         <section className="home-bottom">
@@ -1150,6 +1162,28 @@ export default function App() {
             className="modal panel"
             role="alertdialog"
             aria-modal="true"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                setConfirm(null);
+              }
+              if (event.key === "Tab") {
+                const buttons = Array.from(
+                  event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                    "button:not(:disabled)",
+                  ),
+                );
+                const first = buttons[0],
+                  last = buttons[buttons.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                  event.preventDefault();
+                  last?.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                  event.preventDefault();
+                  first?.focus();
+                }
+              }
+            }}
             aria-labelledby="confirm-title"
             onClick={(e) => e.stopPropagation()}
           >

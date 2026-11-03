@@ -1,6 +1,9 @@
 import type { Locale } from "./types";
 const en = {
   tagline: "TRUST YOUR FRIENDS. MAYBE.",
+  revealLabel: "Reveal",
+  cardTagline: "SOMETHING SEEMS OFF.",
+  whoMe: "who, me?",
   navHow: "How to play",
   home: "Home",
   back: "Back",
@@ -157,6 +160,9 @@ const en = {
 };
 const nl: typeof en = {
   tagline: "VERTROUW JE VRIENDEN. MISSCHIEN.",
+  revealLabel: "Onthulling",
+  cardTagline: "ER KLOPT IETS NIET.",
+  whoMe: "wie, ik?",
   navHow: "Zo werkt het",
   home: "Home",
   back: "Terug",

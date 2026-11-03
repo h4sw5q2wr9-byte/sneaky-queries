@@ -127,6 +127,18 @@ export function subscribeRoom(
       onError,
     );
   const offs = [
+    onValue(
+      path(code, `members/${uid}`),
+      (snap) => {
+        if (!snap.exists()) {
+          const remaining = { ...state.members };
+          delete remaining[uid];
+          state = { ...state, members: remaining };
+          onChange(state);
+        }
+      },
+      onError,
+    ),
     listen("members", "members", {}),
     listen("presence", "presence", {}),
     listen("submitted", "submitted", {}),
@@ -195,7 +207,9 @@ export function presence(
     stopped = true;
     off();
     clearInterval(heartbeat);
-    void onDisconnect(node).cancel();
+    void onDisconnect(node)
+      .cancel()
+      .catch(() => {});
     void set(node, { online: false, lastSeen: serverTimestamp() }).catch(
       () => {},
     );

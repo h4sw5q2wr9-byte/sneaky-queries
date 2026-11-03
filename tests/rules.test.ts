@@ -192,7 +192,12 @@ describe("Firebase authority and concurrency", () => {
         "meta/phase": "answering",
         "meta/roundId": "r2",
         "meta/round": 2,
-        assignments: { alice: { roundId: "r2", question: "Next?" } },
+        assignments: Object.fromEntries(
+          ["host", "alice", "bob"].map((uid) => [
+            uid,
+            { roundId: "r2", question: "Next?" },
+          ]),
+        ),
         responses: null,
         submitted: null,
         discussion: null,
@@ -226,6 +231,44 @@ describe("Firebase authority and concurrency", () => {
     );
     await assertFails(get(room("alice", "assignments/alice")));
     await assertFails(answer("alice"));
+  });
+  it("requires atomic seat and membership removal, preventing capacity bypass", async () => {
+    await players();
+    await assertFails(set(room("alice", "seats/1"), null));
+    await assertFails(set(room("host", "seats/1"), null));
+    await assertFails(set(room("alice", "members/alice"), null));
+    await assertFails(
+      update(room("alice"), { "seats/2": "alice", "members/alice/slot": 2 }),
+    );
+    await assertSucceeds(
+      update(room("alice"), { "seats/1": null, "members/alice": null }),
+    );
+    await assertSucceeds(add("charlie", 1));
+  });
+  it("rejects starting with a roster that missed a concurrent join", async () => {
+    await players();
+    await assertFails(
+      update(room("host"), {
+        "meta/phase": "answering",
+        "meta/roundId": "race",
+        assignments: {
+          host: { roundId: "race", question: "Q?" },
+          alice: { roundId: "race", question: "Q?" },
+        },
+      }),
+    );
+    expect((await get(room("alice", "meta/phase"))).val()).toBe("lobby");
+  });
+  it("recovers a host that disconnected before establishing presence", async () => {
+    await players();
+    await assertFails(set(room("alice", "meta/hostId"), "alice"));
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await set(
+        ref(ctx.database(), "rooms/ABC234/meta/createdAt"),
+        Date.now() - 91000,
+      );
+    });
+    await assertSucceeds(set(room("alice", "meta/hostId"), "alice"));
   });
   it("allows host takeover only after grace; new host inherits the vault", async () => {
     await start();

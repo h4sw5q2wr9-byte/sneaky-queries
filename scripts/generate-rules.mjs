@@ -6,6 +6,13 @@ const host = `auth != null && ${room}.child('meta/hostId').val() === auth.uid &&
 const own = `auth != null && auth.uid === $uid && ${live}`;
 const current = `${room}.child('meta/roundId').val()`;
 const answering = `${room}.child('meta/phase').val() === 'answering'`;
+// Ten fixed seats let RTDB validate capacity and start/admission races without
+// unsupported collection counting or trusting a client-maintained counter.
+const roundRoom = "newData.parent().parent()";
+const completeRoster = Array.from({ length: 10 }, (_, i) => {
+  const seat = `${roundRoom}.child('seats/${i}')`;
+  return `(!${seat}.exists() || ${roundRoom}.child('assignments').child(${seat}.val()).child('roundId').val() === newData.parent().child('roundId').val())`;
+}).join(" && ");
 const rules = {
   rules: {
     ".read": false,
@@ -33,8 +40,7 @@ const rules = {
               "newData.isNumber() && ((!data.exists() && newData.val() > now && newData.val() <= now + 43300000) || newData.val() === data.val())",
           },
           phase: {
-            ".validate":
-              "newData.isString() && (newData.val() === 'lobby' || (newData.val() === 'answering' && (data.val() === 'lobby' || data.val() === 'reveal' || data.val() === 'answering')) || (newData.val() === 'discussion' && (data.val() === 'answering' || data.val() === 'discussion')) || (newData.val() === 'reveal' && (data.val() === 'discussion' || data.val() === 'reveal')))",
+            ".validate": `newData.isString() && (newData.val() === 'lobby' || (newData.val() === 'answering' && (${completeRoster}) && ((data.val() === 'lobby' || data.val() === 'reveal') || (data.val() === 'answering' && newData.parent().child('roundId').val() === data.parent().child('roundId').val()))) || (newData.val() === 'discussion' && (data.val() === 'answering' || data.val() === 'discussion')) || (newData.val() === 'reveal' && (data.val() === 'discussion' || data.val() === 'reveal')))`,
           },
           round: {
             ".validate":
@@ -91,7 +97,7 @@ const rules = {
         seats: {
           ".read": `auth != null && ${live}`,
           $slot: {
-            ".write": `(${host} && !newData.exists()) || (auth != null && ${live} && ((!data.exists() && newData.val() === auth.uid && ${room}.child('meta/phase').val() === 'lobby') || (data.val() === auth.uid && !newData.exists())))`,
+            ".write": `(${host} && !newData.exists() && !newData.parent().parent().child('members').child(data.val()).exists()) || (auth != null && ${live} && ((!data.exists() && newData.val() === auth.uid && ${room}.child('meta/phase').val() === 'lobby') || (data.val() === auth.uid && !newData.exists() && !newData.parent().parent().child('members').child(data.val()).exists())))`,
             ".validate":
               "$slot.matches(/^[0-9]$/) && newData.isString() && ($slot !== '0' || root.child('rooms').child($code).exists() || newData.val() === auth.uid) && newData.parent().parent().child('members').child(newData.val()).child('slot').val() < newData.parent().parent().child('meta/settings/capacity').val() && newData.parent().parent().child('members').child(newData.val()).child('slot').val()+'' === $slot",
           },

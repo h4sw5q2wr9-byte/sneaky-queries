@@ -148,3 +148,105 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
     await Promise.all(contexts.map((c) => c.close()));
   }
 });
+
+test("host loss, takeover, removal, and refilling a vacated seat do not strand a round", async ({
+  browser,
+}) => {
+  test.setTimeout(100000);
+  const contexts = await Promise.all(
+    Array.from({ length: 4 }, () =>
+      browser.newContext({
+        viewport: { width: 360, height: 780 },
+        isMobile: true,
+        hasTouch: true,
+      }),
+    ),
+  );
+  const [host, alice, bob, charlie] = await Promise.all(
+    contexts.map((c) => c.newPage()),
+  );
+  try {
+    await host.goto("/");
+    await host
+      .getByRole("button", { name: "Create a party", exact: true })
+      .click();
+    await host
+      .getByRole("textbox", { name: "Your nickname" })
+      .fill("Original host");
+    await host.getByRole("combobox", { name: "Room size" }).selectOption("3");
+    await host.getByRole("button", { name: "Let’s get sneaky" }).click();
+    await expect(host.locator(".room-code")).toBeVisible();
+    const code = (await host.locator(".room-code").textContent())!;
+    for (const [page, name] of [
+      [alice, "Alice"],
+      [bob, "Bob"],
+    ] as const) {
+      await page.goto(`/?room=${code}`);
+      await page.getByRole("textbox", { name: "Your nickname" }).fill(name);
+      await page.getByRole("button", { name: "I’m in", exact: true }).click();
+      await expect(page.locator(".room-code")).toHaveText(code);
+    }
+    await charlie.goto(`/?room=${code}`);
+    await charlie
+      .getByRole("textbox", { name: "Your nickname" })
+      .fill("Charlie");
+    await charlie.getByRole("button", { name: "I’m in", exact: true }).click();
+    await expect(charlie.getByRole("alert")).toContainText(
+      "This party is full.",
+    );
+    for (const page of [host, alice, bob])
+      await page
+        .getByRole("button", { name: "I’m ready", exact: true })
+        .click();
+    await host.getByRole("button", { name: "Start the round" }).click();
+    await expect(alice.locator(".question")).toBeVisible();
+    await contexts[0].setOffline(true);
+    for (const page of [alice, bob]) {
+      await page
+        .getByRole("textbox", { name: "Your answer" })
+        .fill("Still here");
+      await page.getByRole("button", { name: "Lock in my answer" }).click();
+    }
+    await expect(
+      alice.getByRole("button", { name: "Become host" }),
+    ).toBeEnabled({ timeout: 65000 });
+    await alice.getByRole("button", { name: "Become host" }).click();
+    await alice.locator("summary").click();
+    await alice
+      .getByRole("button", { name: "Remove Original host", exact: true })
+      .click();
+    await alice.getByRole("button", { name: "Confirm", exact: true }).click();
+    await expect(
+      alice.getByRole("heading", { name: "Something doesn’t add up." }),
+    ).toBeVisible();
+    await expect(bob.locator(".answer-card")).toHaveCount(2);
+    await alice.getByRole("button", { name: "Reveal the impostors" }).click();
+    await expect(
+      bob.getByRole("heading", { name: "Caught in the question." }),
+    ).toBeVisible();
+    await alice
+      .getByRole("button", { name: "Change setup", exact: true })
+      .click();
+    await charlie.getByRole("button", { name: "I’m in", exact: true }).click();
+    await expect(charlie.locator(".room-code")).toHaveText(code);
+    await expect(alice.locator(".player-row")).toHaveCount(3);
+    await charlie
+      .getByRole("button", { name: "I’m ready", exact: true })
+      .click();
+    await expect(
+      alice.getByRole("button", { name: "Start the round" }),
+    ).toBeEnabled();
+    await alice.getByRole("button", { name: "Start the round" }).click();
+    await expect(charlie.locator(".question")).toBeVisible();
+    await contexts[0].setOffline(false);
+    await expect(
+      host.getByRole("heading", { name: "You’re no longer in this party." }),
+    ).toBeVisible({ timeout: 15000 });
+    await alice.screenshot({
+      path: "test-results/takeover-mobile.png",
+      fullPage: true,
+    });
+  } finally {
+    await Promise.all(contexts.map((c) => c.close()));
+  }
+});

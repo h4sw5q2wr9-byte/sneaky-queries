@@ -1563,3 +1563,12 @@ footer svg {
     display: none;
   }
 }
+
+.round-progress {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}

@@ -53,7 +53,7 @@ Target repository: https://github.com/h4sw5q2wr9-byte/sneaky-queries
 1. Push this project's `main` branch to that repository.
 2. Repository → Settings → Pages → Build and deployment → Source: **GitHub Actions**.
 3. Settings → Secrets and variables → Actions → **Variables** → add the five `VITE_FIREBASE_*` values listed above as repository variables. They are public web configuration, not service-account secrets.
-4. Actions → **Deploy Sneaky Queries to Pages** → Run workflow, or push to `main`.
+4. Actions → **Deploy Sneaky Queries to Pages** → Run workflow, or push to `main`. If the first run failed at Configure Pages, enabling the source in step 2 and rerunning fixes that setup dependency.
 5. The expected URL is `https://h4sw5q2wr9-byte.github.io/sneaky-queries/`. The actual Actions deployment result is the authority for whether it is live.
 
 The workflow sets `VITE_BASE_PATH=/<repository-name>/` and disables emulators. Invitation links preserve this subpath and use `?room=ABC234`, so direct links and refreshes work without a SPA rewrite. For a user-site repository (`username.github.io`) or a custom domain at its root, change the workflow base to `/`. If no Firebase variables are set, the deployed app clearly displays setup instructions instead of pretending to provide multiplayer. Adding/changing variables requires a new workflow run.
@@ -91,7 +91,7 @@ src/lib/types.ts             Shared game and database types
 src/lib/i18n.ts              Centralized English/Dutch UI strings and layout direction
 src/data/questions.ts        100 sets × 4 questions × 2 complete locales
 scripts/generate-rules.mjs   Database rule source
- tests/                     Game, rules and independent-browser tests
+tests/                     Game, rules and independent-browser tests
 .github/workflows/          Pages deployment and emulator/browser CI
 ```
 
