@@ -1,5 +1,11 @@
 # Validation and phone test plan
 
+## Latest release: compact mobile redesign
+
+The [Pages deployment for `e193eb4`](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41709238414) succeeded. Its [GitHub Actions checks](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41709238528) passed lint, production compilation, 20 unit tests, 12 security-rule tests and all eight browser tests.
+
+All **seven live-site browser checks passed** against that deployed version: a synchronized Firebase round with three distinct anonymous identities, refresh/reconnection/replay/reset and shared language; shared-phone private/offline/recovery play with zero Firebase backend requests; seven-player Dutch play with three unique impostor variations; invitation/local routing; and ten-player layouts at 320 × 568, 375 × 667 (Dutch), and 390 × 844. Compact-layout checks include reduced motion, primary-action visibility, document/horizontal overflow and a simulated open-keyboard viewport. Physical iPhone Safari and Android Chrome testing remains unverified.
+
 ## Recorded checks (2026-11-03)
 
 Production compilation and ESLint passed. Eleven unit tests (six gameplay/content and five configuration/isolation tests), twelve database-rule tests, and two independent-browser emulator tests passed in the [GitHub Actions checks for the configured release](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41673313008).
@@ -109,4 +115,4 @@ Additional actual-phone checks:
 
 Automated viewport checks include 320 × 568, 375 × 667 (Dutch), and 390 × 844 with ten players, full document/horizontal scroll assertions, no clipped primary actions, reduced motion and a simulated 340 px keyboard viewport. These are Chromium emulation checks, not actual iOS keyboard or physical-device verification.
 
-Local redesign checks: ESLint, production build and all 20 unit tests passed. All eight combined emulator/browser tests passed, including host recovery, the shared-phone lifecycle, the single language choice and three compact ten-player layouts. The three-identity online test checks primary-action visibility and page overflow at 320 × 568, 375 × 667 and 390 × 844 through private questions, discussion and reveal. Finite card animations settle before layout measurements. Published verification follows the release deployment.
+Local redesign checks: ESLint, production build and all 20 unit tests passed. All eight combined emulator/browser tests passed, including host recovery, the shared-phone lifecycle, the single language choice and three compact ten-player layouts. The three-identity online test checks primary-action visibility and page overflow at 320 × 568, 375 × 667 and 390 × 844 through private questions, discussion and reveal. Finite card animations settle before layout measurements. The published redesign verification is recorded at the top of this document.
