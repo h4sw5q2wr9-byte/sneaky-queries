@@ -84,3 +84,12 @@ Physical iPhone Safari / Android Chrome testing remains separate from Chromium v
 Pass & Play implementation checks: build and lint passed; all 20 unit tests passed. The combined browser suite passed all five tests (two online, three shared-phone/routing cases). The standalone shared-phone suite was rerun after the final route/ID validation changes. Live-site verification is recorded after deployment.
 
 Two Firebase lifecycle unit tests now verify that importing the app does not initialize Auth or Database and that online play initializes each service once. This guards the background initialization found in the first production Pass & Play network check. The five-test browser suite passed again after deferring those services.
+
+
+### Published Pass & Play verification — 2026-11-03
+
+The [deployment for `f42b3a8`](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41680225117) completed successfully. All **four live-site browser checks passed** in 52 seconds against the published site: the existing three-identity Firebase round/reconnect/replay test, the shared-phone private-turn/offline/recovery lifecycle, the seven-player three-impostor/Dutch/narrow-screen case, and the invitation/remembered-room routing case. The shared-phone network assertion observed **zero Firebase backend requests**. The [release CI run](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41680225132) covers the 20 unit tests, 12 rules tests and five combined browser tests.
+
+The first production-only network assertion caught eager Firebase initialization on the mobile profile; Auth/Database creation was deferred to online operations and guarded with two lifecycle unit tests. The production test then passed. No physical iPhone Safari or Android Chrome was operated by the assistant, and shared-phone data remains protected by the turn-taking UI and the shared browser's normal storage trust model.
+
+Open shared-phone play directly at https://h4sw5q2wr9-byte.github.io/sneaky-queries/?mode=local . For a solo functional try-out, enter three names and take each private turn yourself.

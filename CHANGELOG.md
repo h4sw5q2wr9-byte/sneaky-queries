@@ -26,3 +26,5 @@
 - Added safe local session recovery and background hiding, full English/Dutch UI, and shared setup controls; online room mechanics remain intact.
 
 - Deferred Firebase Auth/Database initialization until online play so the shared-phone flow avoids background Firebase requests, including on mobile browser profiles.
+
+- Verified all four live-site online/shared-phone checks after deployment, including no Firebase backend requests during Pass & Play.
