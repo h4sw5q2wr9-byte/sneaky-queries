@@ -19,6 +19,8 @@ Without Firebase configuration, the home, instructions, and setup forms work, an
 
 ## Connect Firebase (required for real phones)
 
+**Only have an iPhone?** Use the [Safari-only setup guide](docs/IPHONE_SETUP.md). No PC or desktop plugin is required for the console route.
+
 1. Create a Firebase project at https://console.firebase.google.com. The free **Spark** plan is sufficient for casual play; no Cloud Functions or billing account is required. Do not enable paid services just for this app.
 2. In Project settings → General → Your apps, register a **Web app**. Firebase Hosting is not needed. Copy the web `firebaseConfig` values.
 3. In Build → Authentication → Get started → Sign-in method, enable **Anonymous**. Under Authentication → Settings → Authorized domains, add `h4sw5q2wr9-byte.github.io`. Add `localhost` explicitly if needed for local development.
@@ -125,7 +127,7 @@ The notification sender lives in the private repository `h4sw5q2wr9-byte/Telegra
 gh workflow run notify.yml --repo h4sw5q2wr9-byte/Telegram-Tijnv50 --ref main -f message='Sneaky Queries: work complete. Details: https://github.com/h4sw5q2wr9-byte/sneaky-queries'
 ```
 
-Inspect the sender's Actions run before claiming delivery. Its success means Telegram accepted the message. `AGENTS.md` records the user's preference for completion updates when an agent works in this repository. This is an assistant-triggered notification, not a universal ChatGPT hook or a cross-repository automatic deployment event. No secret needs to be duplicated in the public game repository.
+Inspect the sender's Actions run before claiming delivery. Its success means Telegram accepted the message. `AGENTS.md` records the user's preference for completion updates and questions that need their input when an agent works in this repository. Telegram replies are not forwarded into ChatGPT; answers still belong in this chat. This is an assistant-triggered notification, not a universal ChatGPT hook or a cross-repository automatic deployment event. No secret needs to be duplicated in the public game repository.
 
 ## Opt-in live multiplayer check
 
