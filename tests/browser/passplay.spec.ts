@@ -23,6 +23,43 @@ test("Pass & Play completes private turns, safe refresh, discussion, reveal and 
       backendRequests.push(new URL(request.url()).pathname);
   });
   await page.goto("./");
+  const launcher = await page.evaluate(async () => {
+    const manifestUrl = document.querySelector<HTMLLinkElement>(
+      'link[rel="manifest"]',
+    )!.href;
+    const manifest = await (await fetch(manifestUrl)).json();
+    const icons = await Promise.all(
+      manifest.icons.map(async (icon: { src: string }) => {
+        const response = await fetch(new URL(icon.src, manifestUrl));
+        const bytes = await response.arrayBuffer();
+        const view = new DataView(bytes);
+        return {
+          ok: response.ok,
+          width: view.getUint32(16),
+          height: view.getUint32(20),
+        };
+      }),
+    );
+    const touch = await fetch(
+      document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')!
+        .href,
+    );
+    return {
+      display: manifest.display,
+      start: new URL(manifest.start_url, manifestUrl).pathname,
+      base: new URL("./", location.href).pathname,
+      icons,
+      touch: touch.ok,
+    };
+  });
+  expect(launcher.display).toBe("standalone");
+  expect(launcher.start).toBe(launcher.base);
+  expect(launcher.icons).toEqual([
+    { ok: true, width: 192, height: 192 },
+    { ok: true, width: 512, height: 512 },
+  ]);
+  expect(launcher.touch).toBe(true);
+
   await expect(page.locator(".deck-card.front")).toHaveCSS(
     "animation-name",
     "frontFloat",

@@ -14,12 +14,12 @@ import {
   Radio,
   Settings2,
   ShieldQuestion,
-  Smartphone,
   Users,
   WifiOff,
   X,
 } from "lucide-react";
 import { Button, ConfirmDialog, Mask, Title } from "./components/ui";
+import { Home } from "./components/Home";
 import { SetupWizard } from "./components/SetupWizard";
 import { LocalParty } from "./components/LocalParty";
 import { HowToPlay } from "./components/HowToPlay";
@@ -356,7 +356,9 @@ export default function App() {
             <div>
               <span className="eyebrow">{t("roomCode")}</span>
               <div className="room-code" aria-label={t("roomCode")}>
-                {roomCode}
+                {roomCode.split("").map((letter, i) => (
+                  <span key={i}>{letter}</span>
+                ))}
               </div>
             </div>
             <div className="invite-actions">
@@ -467,17 +469,19 @@ export default function App() {
                 );
               }}
             >
-              <div className="eyebrow">
-                <ShieldQuestion size={14} />
-                {t("privateLabel")}
+              <div className="question-display">
+                <div className="eyebrow">
+                  <ShieldQuestion size={14} />
+                  {t("privateLabel")}
+                </div>
+                {room?.assignment?.roundId === meta.roundId ? (
+                  <h2 className="question scroll-region">
+                    {room.assignment.question}
+                  </h2>
+                ) : (
+                  <LoaderCircle className="spin" />
+                )}
               </div>
-              {room?.assignment?.roundId === meta.roundId ? (
-                <h2 className="question scroll-region">
-                  {room.assignment.question}
-                </h2>
-              ) : (
-                <LoaderCircle className="spin" />
-              )}
               <div className="answer-field">
                 <label htmlFor="online-answer">{t("answerLabel")}</label>
                 <span>{answer.length}/160</span>
@@ -622,59 +626,12 @@ export default function App() {
     content = <LocalParty locale={locale} onPhaseChange={onLocalPhase} />;
   else if (screen === "home")
     content = (
-      <section className="home-screen">
-        <div className="home-deck" aria-hidden="true">
-          <div className="deck-card back">?</div>
-          <div className="deck-card front">
-            <span>SQ</span>
-            <Mask />
-            <i>?</i>
-          </div>
-          <span className="deck-spark one">✦</span>
-          <span className="deck-spark two">✧</span>
-        </div>
-        <div className="home-heading">
-          <h1>
-            {t("hero1")} <span>{t("hero2")}</span>
-          </h1>
-          <p>{t("intro")}</p>
-        </div>
-        <div className="mode-options">
-          <button
-            className="mode-card pass-play-entry"
-            aria-label={t("passPlay")}
-            onClick={() => go("local")}
-          >
-            <span className="mode-icon">
-              <Smartphone size={22} />
-            </span>
-            <span>
-              <strong>{t("passPlay")}</strong>
-              <small>{t("passPlaySub")}</small>
-            </span>
-            <ArrowRight size={18} />
-          </button>
-          <button
-            className="mode-card online-entry"
-            aria-label={t("onlineMode")}
-            onClick={() => go("online")}
-          >
-            <span className="mode-icon">
-              <Users size={22} />
-            </span>
-            <span>
-              <strong>{t("onlineMode")}</strong>
-              <small>{t("onlineSub")}</small>
-            </span>
-            <ArrowRight size={18} />
-          </button>
-        </div>
-        <div className="home-facts">
-          <span>{t("players")}</span>
-          <i />
-          <span>{t("free")}</span>
-        </div>
-      </section>
+      <Home
+        locale={locale}
+        onLocal={() => go("local")}
+        onOnline={() => go("online")}
+        onHelp={() => go("how")}
+      />
     );
   else if (screen === "online")
     content = (

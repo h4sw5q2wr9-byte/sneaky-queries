@@ -34,7 +34,7 @@ export function PlayerRoster({
     <div className="roster-container">
       <div className="player-list" key={current}>
         {entries.slice(current * 4, current * 4 + 4).map(([id, m], i) => (
-          <div className="player-row" key={id}>
+          <div className={`player-row ${m.ready ? "is-ready" : ""}`} key={id}>
             <span className={`avatar avatar-${(current * 4 + i) % 5}`}>
               {Array.from(m.nickname)[0]?.toUpperCase()}
             </span>

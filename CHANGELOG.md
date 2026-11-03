@@ -37,3 +37,12 @@
 - Added card flips, dealt player cards, answer-lock stamps, animated handoff, staggered answers, short reveal confetti and reduced-motion support.
 - Adapted the layout to the visual viewport when the software keyboard opens, with bounded scrolling for long text. Improved dialog focus handling.
 - Added small-screen layout, ten-player paging, single-language and keyboard-viewport regression checks. Gameplay, Firebase privacy boundaries and both modes remain intact.
+
+## Native app visual direction — 2026-11-03
+
+- Replaced the previous layout and style system with a charcoal shell, compact contextual bars, vivid purple controls and layered purple/magenta cards using native system typography.
+- Rebuilt Home as a game hub with side-by-side mode tiles, a compact animated game shelf, a short round guide and a help row.
+- Added room-code tiles and a two-column player deck with avatar circles, readiness states and a separated host sheet. Redesigned shared-phone cards with numbered turns and muted completed states.
+- Separated private questions into a centered secret card, inset answer tray and bottom lock action. Restyled social answer cards, reveal cards, grouped setup controls, navigation pills and confirmation sheets.
+- Preserved brief spring/flip/press motion, reduced motion, paged groups, keyboard handling and one party language.
+- Added standalone web app metadata, a subpath-safe manifest and dedicated iPhone/launcher icons. Offline launch caching is not included.

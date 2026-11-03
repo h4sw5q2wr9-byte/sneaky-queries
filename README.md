@@ -136,11 +136,11 @@ For browser tests install Chromium with `npx playwright install --with-deps chro
 
 ## Accessibility and scope
 
-Dark mode only, with an ink-purple card-game design, pink actions, card flips, dealt player cards, answer-lock stamps and brief reveal confetti. OS reduced-motion preferences disable movement.
+Dark mode only, with a charcoal app shell, vivid purple actions, magenta accents, layered game cards, circular avatars, compact contextual bars, card flips, answer-lock stamps and brief reveal confetti. The home hub has two side-by-side mode tiles; the lobby uses room-code tiles and a player deck. Private turns separate the question card, inset answer input and bottom action bar. System typography follows the device. OS reduced-motion preferences disable movement.
 
 The app uses the available mobile viewport, including software-keyboard resizing. Setup is split into two steps; names, player cards, online rosters and discussion answers use four items per page; impostors reveal one per page. Primary actions stay at the bottom of their screen. Long text, unusually short viewports and keyboard entry can scroll inside a bounded region, rather than creating a long webpage.
 
-Large touch targets, labelled fields, keyboard focus rings, live errors, semantic progress, safe text rendering, and reduced-motion support. The app uses Google Fonts with local system fallbacks. The provided web configuration includes a measurement ID, but the app does not initialize Google Analytics or collect analytics events. No external illustration services. V1 intentionally has no mandatory voting, scores, or leaderboard.
+Large touch targets, labelled fields, keyboard focus rings, live errors, semantic progress, safe text rendering, and reduced-motion support. Typography uses the native system font stack; no external font request is needed. The provided web configuration includes a measurement ID, but the app does not initialize Google Analytics or collect analytics events. No external illustration services. V1 intentionally has no mandatory voting, scores, or leaderboard.
 
 ## Telegram completion updates
 
@@ -157,3 +157,7 @@ Keep messages to a completion signal, one short sentence about the change, and a
 `npm run test:live` runs the online three-identity round test plus six Pass & Play, routing and compact-layout checks against the deployed site, without emulators. It creates real anonymous Firebase accounts and a real room that expires after 12 hours. Override `SQ_LIVE_URL` for another deployment, retaining its trailing slash. TLS verification stays enabled. The test uses the configured HTTPS proxy when present; managed test environments must trust their provided proxy CA in the browser.
 
 `npm run test:live:rules` is an additional opt-in check against the configured production Firebase project. It creates three temporary anonymous identities and its own expiring room, verifies 28 setup/permission/phase checks, then deletes only those test identities. It does not read or mutate other parties. Its room records follow the same 12-hour access expiry and retention policy as normal game rooms. Python 3 is required for this optional standard-library script. Never run live tests against a project you are not authorized to test.
+
+## iPhone home screen
+
+In Safari, open the published game, choose **Share → Add to Home Screen**, and enable **Open as Web App** if offered. The repository includes a relative-scope web app manifest, standalone display metadata and dedicated PNG home-screen icons; these preserve the GitHub Pages subpath. App content uses the safe-area insets and available keyboard viewport. This is a web app, not an App Store binary. No service worker or offline launch cache is included; open it online. An already loaded Pass & Play round still works offline.

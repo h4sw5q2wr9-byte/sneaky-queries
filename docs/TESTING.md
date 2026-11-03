@@ -116,3 +116,11 @@ Additional actual-phone checks:
 Automated viewport checks include 320 × 568, 375 × 667 (Dutch), and 390 × 844 with ten players, full document/horizontal scroll assertions, no clipped primary actions, reduced motion and a simulated 340 px keyboard viewport. These are Chromium emulation checks, not actual iOS keyboard or physical-device verification.
 
 Local redesign checks: ESLint, production build and all 20 unit tests passed. All eight combined emulator/browser tests passed, including host recovery, the shared-phone lifecycle, the single language choice and three compact ten-player layouts. The three-identity online test checks primary-action visibility and page overflow at 320 × 568, 375 × 667 and 390 × 844 through private questions, discussion and reveal. Finite card animations settle before layout measurements. The published redesign verification is recorded at the top of this document.
+
+## Native app direction acceptance
+
+The native-style UI rework preserves the same gameplay and Firebase rules. Check both play modes, all four lobby/player pages where applicable, long named answers and all impostor pages. Inspect compact bars and bottom actions at 320 × 568, 375 × 667 and 390 × 844; repeat with software keyboards and Reduce Motion enabled.
+
+On an actual iPhone, use Safari → Share → Add to Home Screen. Confirm the custom icon and standalone launch, safe areas around the status bar/home indicator, and keyboard opening/dismissal on name and answer fields. Close and relaunch the web app online. Session storage behavior can differ across Safari tabs and standalone launches: do not assume an existing party transfers between them. No offline-launch support or physical iPhone verification is claimed.
+
+Native-style implementation checks: build, lint and 20 unit tests passed; all eight combined emulator/browser tests passed. The final six shared-phone checks passed again after the compact-bar adjustments, including the manifest's subpath-safe start URL and successful PNG launcher/touch-icon loading. Production verification is recorded after deployment.

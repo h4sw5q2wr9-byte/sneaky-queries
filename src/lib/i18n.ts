@@ -1,5 +1,9 @@
 import type { Locale } from "./types";
 const en = {
+  partyFlow: "The round",
+  quickAnswer: "Answer",
+  quickDiscuss: "Discuss",
+  quickReveal: "Reveal",
   onlineMode: "Online party",
   onlineSub: "Everyone on their own phone",
   youAndParty: "Your party",
@@ -226,6 +230,10 @@ const en = {
   error_joinFailed: "Couldn’t join. Please try again.",
 };
 const nl: typeof en = {
+  partyFlow: "De ronde",
+  quickAnswer: "Antwoord",
+  quickDiscuss: "Bespreek",
+  quickReveal: "Onthul",
   onlineMode: "Online party",
   onlineSub: "Iedereen op een eigen telefoon",
   youAndParty: "Je party",

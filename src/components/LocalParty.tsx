@@ -271,13 +271,15 @@ export function LocalParty({
               }
             }}
           >
-            <div className="eyebrow">
-              <ShieldQuestion size={14} />
-              {t("privateLabel")}
+            <div className="question-display">
+              <div className="eyebrow">
+                <ShieldQuestion size={14} />
+                {t("privateLabel")}
+              </div>
+              <h2 className="question scroll-region">
+                {game.vault!.assignments[selected].question}
+              </h2>
             </div>
-            <h2 className="question scroll-region">
-              {game.vault!.assignments[selected].question}
-            </h2>
             <div className="answer-field">
               <label htmlFor="local-answer">{t("answerLabel")}</label>
               <span>
@@ -359,6 +361,13 @@ export function LocalParty({
                     aria-label={`${member.nickname}, ${t(locked ? "localLocked" : "localChooseName")}`}
                     onClick={() => choose(uid)}
                   >
+                    <span className="player-card-number" aria-hidden="true">
+                      {locked ? (
+                        <Check size={14} />
+                      ) : (
+                        String(member.slot + 1).padStart(2, "0")
+                      )}
+                    </span>
                     <span className={`avatar avatar-${member.slot % 5}`}>
                       {Array.from(member.nickname)[0]?.toUpperCase()}
                     </span>
