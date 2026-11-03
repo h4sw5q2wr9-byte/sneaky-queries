@@ -7,6 +7,7 @@ export default defineConfig({
   webServer: undefined,
   grep: /three independent phones/,
   timeout: 90000,
+  expect: { timeout: 15000 },
   use: {
     ...local.use,
     baseURL:

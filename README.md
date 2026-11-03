@@ -10,14 +10,13 @@ Use Node 22+ and npm. Java 21+ is needed only for emulator tests.
 
 ```sh
 npm ci
-cp .env.example .env.local
-# Fill in your Firebase web configuration, as described below.
 npm run dev
+# Optional: copy .env.example to .env.local to override the public defaults.
 ```
 
-Without Firebase configuration, the home, instructions, and setup forms work, and creating/joining a party explains what is missing. Multiplayer is never simulated locally by the app. To play entirely locally against the real Firebase emulators, set `VITE_USE_EMULATORS=true` in `.env.local`, run `npm run emulators` in one terminal, and `npm run dev` in another. The demo project needs no credentials or billing. Emulator connections use loopback and are for local browser testing, not friends' phones.
+This checkout uses the owner-approved public Firebase web configuration in `src/data/firebase.web.json` by default. Local development connects to that real project unless emulator mode is selected. Environment values can override the five required identifiers for another deployment; blank variables fall back to the public file. The app never simulates multiplayer. To play entirely locally against the real Firebase emulators, set `VITE_USE_EMULATORS=true` in `.env.local`, run `npm run emulators` in one terminal, and `npm run dev` in another. The demo project needs no credentials or billing. Emulator connections use loopback and are for local browser testing, not friends' phones.
 
-## Connect Firebase (required for real phones)
+## Firebase configuration and setup for another project
 
 **Only have an iPhone?** Use the [Safari-only setup guide](docs/IPHONE_SETUP.md). No PC or desktop plugin is required for the console route.
 
@@ -32,7 +31,7 @@ Without Firebase configuration, the home, instructions, and setup forms work, an
    npx firebase deploy --only database --project YOUR_FIREBASE_PROJECT_ID
    ```
 
-6. Put these five values in `.env.local` (ignored by Git):
+6. This repository already contains its approved public configuration. For another project, update `src/data/firebase.web.json`, or override all five values in `.env.local` (ignored by Git):
 
    ```dotenv
    VITE_FIREBASE_API_KEY=your_public_web_api_key
@@ -54,11 +53,11 @@ Target repository: https://github.com/h4sw5q2wr9-byte/sneaky-queries
 
 1. Push this project's `main` branch to that repository.
 2. Repository → Settings → Pages → Build and deployment → Source: **GitHub Actions**.
-3. Settings → Secrets and variables → Actions → **Variables** → add the five `VITE_FIREBASE_*` values listed above as repository variables. They are public web configuration, not service-account secrets.
+3. The included `src/data/firebase.web.json` supplies this project's public web configuration. To target another project without editing that file, add all five `VITE_FIREBASE_*` values under Settings → Secrets and variables → Actions → **Variables**. Blank variables retain the included defaults.
 4. Actions → **Deploy Sneaky Queries to Pages** → Run workflow, or push to `main`. If the first run failed at Configure Pages, enabling the source in step 2 and rerunning fixes that setup dependency.
 5. The expected URL is `https://h4sw5q2wr9-byte.github.io/sneaky-queries/`. The actual Actions deployment result is the authority for whether it is live.
 
-The workflow sets `VITE_BASE_PATH=/<repository-name>/` and disables emulators. Invitation links preserve this subpath and use `?room=ABC234`, so direct links and refreshes work without a SPA rewrite. For a user-site repository (`username.github.io`) or a custom domain at its root, change the workflow base to `/`. If no Firebase variables are set, the deployed app clearly displays setup instructions instead of pretending to provide multiplayer. Adding/changing variables requires a new workflow run.
+The workflow sets `VITE_BASE_PATH=/<repository-name>/` and disables emulators. Invitation links preserve this subpath and use `?room=ABC234`, so direct links and refreshes work without a SPA rewrite. For a user-site repository (`username.github.io`) or a custom domain at its root, change the workflow base to `/`. If both the public file and any overrides are incomplete, the app displays setup instructions. Adding/changing configuration requires a new workflow run. Emulator mode always forces a demo project and loopback endpoints, regardless of the production defaults.
 
 Database rules deploy separately from Pages. Run the security tests before changing rules. `scripts/generate-rules.mjs` is the maintainable rule source; run `node scripts/generate-rules.mjs` after edits and commit both it and the generated JSON.
 
@@ -88,7 +87,9 @@ src/App.tsx                 All game screens, live subscriptions and host coordi
 src/styles.css              Purple/pink responsive design, reveal and reduced motion
 src/lib/game.ts             Pure setup, assignment, randomness, question history logic
 src/lib/rooms.ts             Firebase operations, admission, progress, presence and recovery
-src/lib/firebase.ts          Public config, anonymous session identity, emulator connection
+src/lib/firebase.ts          Anonymous session identity and Firebase SDK initialization
+src/lib/config.ts            Public defaults, environment overrides and demo isolation
+src/data/firebase.web.json   Owner-approved public web app configuration
 src/lib/types.ts             Shared game and database types
 src/lib/i18n.ts              Centralized English/Dutch UI strings and layout direction
 src/data/questions.ts        100 sets × 4 questions × 2 complete locales
@@ -117,7 +118,7 @@ For browser tests install Chromium with `npx playwright install --with-deps chro
 
 ## Accessibility and scope
 
-Dark mode only; large touch targets, labelled fields, keyboard focus rings, live errors, semantic progress, safe text rendering, and reduced-motion support. The app uses Google Fonts with local system fallbacks. No tracking/analytics or external illustration services. V1 intentionally has no mandatory voting, scores, or leaderboard.
+Dark mode only; large touch targets, labelled fields, keyboard focus rings, live errors, semantic progress, safe text rendering, and reduced-motion support. The app uses Google Fonts with local system fallbacks. The provided web configuration includes a measurement ID, but the app does not initialize Google Analytics or collect analytics events. No external illustration services. V1 intentionally has no mandatory voting, scores, or leaderboard.
 
 ## Telegram completion updates
 

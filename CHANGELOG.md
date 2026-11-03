@@ -17,3 +17,5 @@
 - Added browser-only iPhone Firebase setup guidance and extended Telegram updates to questions requiring user input; documented that replies remain in ChatGPT.
 
 - Added a phone-friendly copy page generated from the tested database security rules, with Safari selection fallback.
+
+- Connected the owner-approved Firebase web app through public configuration defaults, kept optional environment overrides, and added five tests ensuring demo emulator isolation.
