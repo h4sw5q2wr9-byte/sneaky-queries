@@ -10,3 +10,6 @@ playwright-report/
 test-results/
 
 __pycache__/
+
+# Generated from the authoritative database.rules.json during dev/build.
+public/firebase-setup.html

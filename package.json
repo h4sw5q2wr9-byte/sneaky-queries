@@ -12,7 +12,9 @@
     "test:rules": "firebase emulators:exec --project demo-sneaky-queries --only auth,database 'vitest run --config vitest.rules.config.ts'",
     "test:e2e": "firebase emulators:exec --project demo-sneaky-queries --only auth,database 'playwright test'",
     "emulators": "firebase emulators:start --project demo-sneaky-queries --only auth,database",
-    "test:live": "playwright test --config playwright.live.config.ts"
+    "test:live": "playwright test --config playwright.live.config.ts",
+    "predev": "node scripts/prepare-firebase-setup.mjs",
+    "prebuild": "node scripts/prepare-firebase-setup.mjs"
   },
   "dependencies": {
     "firebase": "^12.5.0",

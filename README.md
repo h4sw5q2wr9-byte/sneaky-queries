@@ -25,7 +25,7 @@ Without Firebase configuration, the home, instructions, and setup forms work, an
 2. In Project settings → General → Your apps, register a **Web app**. Firebase Hosting is not needed. Copy the web `firebaseConfig` values.
 3. In Build → Authentication → Get started → Sign-in method, enable **Anonymous**. Under Authentication → Settings → Authorized domains, add `h4sw5q2wr9-byte.github.io`. Add `localhost` explicitly if needed for local development.
 4. In Build → Realtime Database, create a database in **locked mode**. Copy its actual URL, including the region if present, for example `https://YOUR-PROJECT-default-rtdb.europe-west1.firebasedatabase.app`. Firestore is not used.
-5. Deploy the entire contents of [database.rules.json](database.rules.json) in the Realtime Database → Rules editor and click **Publish**. Never select open/test-mode production rules. Alternatively, authenticate the Firebase CLI with your own account, then run:
+5. On a phone, use the [Copy all security rules page](https://h4sw5q2wr9-byte.github.io/sneaky-queries/firebase-setup.html). Deploy the entire contents of [database.rules.json](database.rules.json) in the Realtime Database → Rules editor and click **Publish**. Never select open/test-mode production rules. Alternatively, authenticate the Firebase CLI with your own account, then run:
 
    ```sh
    npx firebase login

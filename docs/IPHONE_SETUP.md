@@ -27,7 +27,7 @@ Open **Build → Realtime Database → Create Database**. Choose a location near
 
 For this casual V1 setup, use the free **Spark** plan. No Functions, Storage, Firebase Hosting, or billing upgrade is needed by this project.
 
-Open the database's **Rules** tab. Replace the initial rules with the full contents of [database.rules.json](https://github.com/h4sw5q2wr9-byte/sneaky-queries/blob/main/database.rules.json), then tap **Publish**. The file page's copy control copies the full rules; do not copy only one visible line. Never replace them with open/test-mode rules.
+Open the [phone-friendly rules copy page](https://h4sw5q2wr9-byte.github.io/sneaky-queries/firebase-setup.html) and tap **Copy all security rules**. Return to the database's **Rules** tab, select all the initial rules, paste, then tap **Publish**. This page is generated from the same [database.rules.json](https://github.com/h4sw5q2wr9-byte/sneaky-queries/blob/main/database.rules.json) used by the tested application. Never replace it with open/test-mode rules.
 
 Copy the database URL shown in the database's Data tab. It ends in `.firebaseio.com` or `.firebasedatabase.app`; retain the complete regional URL.
 
