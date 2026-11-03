@@ -24,3 +24,5 @@
 
 - Added Pass & Play beside online multiplayer: shared-phone setup, named cards, private reveal covers, one-time answers, grey completed cards, deliberate discussion/reveal, replay and setup reset.
 - Added safe local session recovery and background hiding, full English/Dutch UI, and shared setup controls; online room mechanics remain intact.
+
+- Deferred Firebase Auth/Database initialization until online play so the shared-phone flow avoids background Firebase requests, including on mobile browser profiles.

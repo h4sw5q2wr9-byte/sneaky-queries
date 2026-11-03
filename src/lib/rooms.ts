@@ -7,7 +7,7 @@ import {
   set,
   update,
 } from "firebase/database";
-import { db, identity } from "./firebase";
+import { database, identity } from "./firebase";
 import {
   makeRound,
   nextHistory,
@@ -29,7 +29,7 @@ export class GameError extends Error {
   }
 }
 const path = (code: string, child = "") =>
-  ref(db, `rooms/${code}${child ? "/" + child : ""}`);
+  ref(database(), `rooms/${code}${child ? "/" + child : ""}`);
 const member = (nickname: string, slot = 0): Member => ({
   nickname: nickname.trim(),
   ready: false,
@@ -181,7 +181,7 @@ export function presence(
   let heartbeat: ReturnType<typeof setInterval> | undefined;
   let stopped = false;
   const node = path(code, `presence/${uid}`);
-  const off = onValue(ref(db, ".info/connected"), async (snap) => {
+  const off = onValue(ref(database(), ".info/connected"), async (snap) => {
     const connected = snap.val() === true;
     onConnection(connected);
     clearInterval(heartbeat);

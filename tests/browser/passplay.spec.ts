@@ -47,7 +47,9 @@ test("Pass & Play completes private turns, safe refresh, discussion, reveal and 
         request.url(),
       )
     )
-      backendRequests.push(new URL(request.url()).hostname);
+      backendRequests.push(
+        new URL(request.url()).origin + new URL(request.url()).pathname,
+      );
   });
   await page.goto("./");
   await page.getByRole("button", { name: "Pass & Play", exact: true }).click();

@@ -5,6 +5,7 @@ export default defineConfig({
       "tests/game.test.ts",
       "tests/config.test.ts",
       "tests/local.test.ts",
+      "tests/firebase-lazy.test.ts",
     ],
   },
 });

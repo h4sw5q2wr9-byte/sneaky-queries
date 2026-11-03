@@ -81,4 +81,6 @@ For actual phones, additionally check:
 
 Physical iPhone Safari / Android Chrome testing remains separate from Chromium viewport tests.
 
-Pass & Play implementation checks: build and lint passed; all 18 unit tests passed. The combined browser suite passed all five tests (two online, three shared-phone/routing cases). The standalone shared-phone suite was rerun after the final route/ID validation changes. Live-site verification is recorded after deployment.
+Pass & Play implementation checks: build and lint passed; all 20 unit tests passed. The combined browser suite passed all five tests (two online, three shared-phone/routing cases). The standalone shared-phone suite was rerun after the final route/ID validation changes. Live-site verification is recorded after deployment.
+
+Two Firebase lifecycle unit tests now verify that importing the app does not initialize Auth or Database and that online play initializes each service once. This guards the background initialization found in the first production Pass & Play network check. The five-test browser suite passed again after deferring those services.

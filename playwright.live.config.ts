@@ -5,7 +5,7 @@ import local from "./playwright.config";
 export default defineConfig({
   ...local,
   webServer: undefined,
-  grep: /three independent phones/,
+  grep: /three independent phones|Pass & Play|choosing one phone/,
   timeout: 90000,
   expect: { timeout: 15000 },
   use: {
