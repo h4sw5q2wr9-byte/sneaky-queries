@@ -1,6 +1,12 @@
 # Validation and phone test plan
 
-## Latest release: compact mobile redesign
+## Latest release: native app direction
+
+The [Pages deployment for `ff274f3`](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41724174467) and [GitHub CI](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41724174379) succeeded. CI passed lint, production compilation, 20 unit tests, 12 security-rule tests and eight combined browser tests.
+
+All seven live-site browser checks passed in 58 seconds: three independent Firebase identities completing synchronized rounds/reconnect/replay/reset; private shared-phone/offline/recovery play with zero Firebase backend requests; Dutch with seven players and three distinct impostor variations; invitation routing; and ten-player layouts at 320 × 568, 375 × 667 and 390 × 844, including reduced motion and a simulated keyboard viewport. The live check also fetched the manifest and PNG icons, verifying standalone display metadata and that the launch URL stays within the repository subpath. These checks do not verify actual iPhone installation, Safari rendering or physical-device keyboard behavior.
+
+## Previous release: compact mobile redesign
 
 The [Pages deployment for `e193eb4`](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41709238414) succeeded. Its [GitHub Actions checks](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41709238528) passed lint, production compilation, 20 unit tests, 12 security-rule tests and all eight browser tests.
 
@@ -123,4 +129,4 @@ The native-style UI rework preserves the same gameplay and Firebase rules. Check
 
 On an actual iPhone, use Safari → Share → Add to Home Screen. Confirm the custom icon and standalone launch, safe areas around the status bar/home indicator, and keyboard opening/dismissal on name and answer fields. Close and relaunch the web app online. Session storage behavior can differ across Safari tabs and standalone launches: do not assume an existing party transfers between them. No offline-launch support or physical iPhone verification is claimed.
 
-Native-style implementation checks: build, lint and 20 unit tests passed; all eight combined emulator/browser tests passed. The final six shared-phone checks passed again after the compact-bar adjustments, including the manifest's subpath-safe start URL and successful PNG launcher/touch-icon loading. Production verification is recorded after deployment.
+Native-style implementation checks: build, lint and 20 unit tests passed; all eight combined emulator/browser tests passed. The final six shared-phone checks passed again after the compact-bar adjustments, including the manifest's subpath-safe start URL and successful PNG launcher/touch-icon loading. Production verification is recorded at the top of this document.
