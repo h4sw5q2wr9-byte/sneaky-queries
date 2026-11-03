@@ -1,6 +1,10 @@
 # Validation and phone test plan
 
-## Latest release: native app direction
+## Latest fix: iPhone keyboard positioning
+
+The [Pages deployment for `4228038`](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41729788371) and [CI](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41729788303) succeeded. CI passed build/lint, 20 unit tests, 12 security-rule tests and eight browser tests. All seven live-site checks passed in 56.4 seconds, including the expanded keyboard height/panning/dismissal regression checks at all three phone sizes and a synchronized round with three independent Firebase identities. These are browser simulations; the supplied physical-iPhone bug report motivated the fix, but the assistant did not operate an actual iPhone after deployment.
+
+## Previous release: native app direction
 
 The [Pages deployment for `ff274f3`](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41724174467) and [GitHub CI](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41724174379) succeeded. CI passed lint, production compilation, 20 unit tests, 12 security-rule tests and eight combined browser tests.
 
