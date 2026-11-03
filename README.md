@@ -117,14 +117,15 @@ For browser tests install Chromium with `npx playwright install --with-deps chro
 
 Dark mode only; large touch targets, labelled fields, keyboard focus rings, live errors, semantic progress, safe text rendering, and reduced-motion support. The app uses Google Fonts with local system fallbacks. No tracking/analytics or external illustration services. V1 intentionally has no mandatory voting, scores, or leaderboard.
 
-## Optional Telegram alerts
+## Telegram completion updates
 
-The `Telegram project notifications` workflow sends a short Telegram message after this repository's Pages deployment or multiplayer/security workflow completes on `main`, including failures. It does not send messages for all ChatGPT conversations. No message is sent until these repository **Secrets** are configured:
+The notification sender lives in the private repository `h4sw5q2wr9-byte/Telegram-Tijnv50`. Bot credentials stay in that repository's Actions secrets; they are not copied into this project. Authorized assistants can send a completion or blocked-status update with:
 
-- `TELEGRAM_BOT_TOKEN`: the token for your Telegram bot, created through the verified **@BotFather** account in Telegram.
-- `TELEGRAM_CHAT_ID`: the private chat ID or group ID receiving notifications. Start your bot first; bots cannot initiate a private chat themselves.
+```sh
+gh workflow run notify.yml --repo h4sw5q2wr9-byte/Telegram-Tijnv50 --ref main -f message='Sneaky Queries: work complete. Details: https://github.com/h4sw5q2wr9-byte/sneaky-queries'
+```
 
-Store both under Settings → Secrets and variables → Actions → **Secrets**. Never commit the token or paste it into chat. Obtain your chat ID through your own bot's Telegram `getUpdates` response after sending it `/start`; the account authorization and initial Telegram interaction require you. Once those two secrets exist, notifications run automatically. The sender uses only Python's standard library, keeps credentials out of logs, and skips cleanly when unconfigured.
+Inspect the sender's Actions run before claiming delivery. Its success means Telegram accepted the message. `AGENTS.md` records the user's preference for completion updates when an agent works in this repository. This is an assistant-triggered notification, not a universal ChatGPT hook or a cross-repository automatic deployment event. No secret needs to be duplicated in the public game repository.
 
 ## Opt-in live multiplayer check
 

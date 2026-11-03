@@ -11,3 +11,5 @@
 
 - Hardened atomic seat removal and start/admission races; verified host migration and freed-seat reuse in isolated browsers.
 - Added opt-in production browser checks that preserve repository subpaths and optional Telegram deployment/test notifications with secrets kept out of source and logs.
+
+- Moved completion notifications to the private shared sender so Telegram credentials stay in one repository; recorded the user's notification preference for future repository work.
