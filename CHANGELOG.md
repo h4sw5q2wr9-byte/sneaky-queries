@@ -46,3 +46,9 @@
 - Separated private questions into a centered secret card, inset answer tray and bottom lock action. Restyled social answer cards, reveal cards, grouped setup controls, navigation pills and confirmation sheets.
 - Preserved brief spring/flip/press motion, reduced motion, paged groups, keyboard handling and one party language.
 - Added standalone web app metadata, a subpath-safe manifest and dedicated iPhone/launcher icons. Offline launch caching is not included.
+
+## iPhone keyboard positioning fix — 2026-11-03
+
+- Removed page-level `scrollIntoView()` on keyboard resize. Fixed the app root to the visual viewport and track Safari's vertical viewport panning as well as height changes.
+- Restricted focused-field scrolling to bounded form regions; kept the compact layout during keyboard dismissal. Desktop framing now uses the same measured height.
+- Extended phone layout checks to shifted viewport origins, changing offsets, blur-before-dismissal, and restored full-height layout with answers preserved.

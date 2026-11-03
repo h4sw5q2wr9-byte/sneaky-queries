@@ -11,6 +11,7 @@
   --border: #ffffff12;
   --panel: #191a25;
   --app-height: 100dvh;
+  --app-offset-top: 0px;
 }
 * {
   box-sizing: border-box;
@@ -22,7 +23,13 @@ body,
   width: 100%;
   margin: 0;
 }
+html {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 body {
+  position: fixed;
+  inset: 0;
   min-width: 320px;
   overflow: hidden;
   overscroll-behavior: none;
@@ -30,6 +37,11 @@ body {
     radial-gradient(ellipse at 50% 0, #34214d55, transparent 70%), #08090e;
 }
 #root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: var(--app-height);
+  transform: translateY(var(--app-offset-top));
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -2010,7 +2022,7 @@ main {
 
 @media (min-width: 600px) {
   .app-shell {
-    height: min(calc(100dvh - 20px), 900px);
+    height: min(calc(var(--app-height) - 20px), 900px);
     margin: 10px 0;
     border: 1px solid #ffffff13;
     border-radius: 32px;

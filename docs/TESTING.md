@@ -130,3 +130,9 @@ The native-style UI rework preserves the same gameplay and Firebase rules. Check
 On an actual iPhone, use Safari → Share → Add to Home Screen. Confirm the custom icon and standalone launch, safe areas around the status bar/home indicator, and keyboard opening/dismissal on name and answer fields. Close and relaunch the web app online. Session storage behavior can differ across Safari tabs and standalone launches: do not assume an existing party transfers between them. No offline-launch support or physical iPhone verification is claimed.
 
 Native-style implementation checks: build, lint and 20 unit tests passed; all eight combined emulator/browser tests passed. The final six shared-phone checks passed again after the compact-bar adjustments, including the manifest's subpath-safe start URL and successful PNG launcher/touch-icon loading. Production verification is recorded at the top of this document.
+
+## iPhone keyboard jump regression
+
+A user screenshot showed Safari lifting the whole answer screen above the keyboard. The old test simulated only a smaller viewport height; it did not simulate Safari's separate viewport panning. The fix removes page-level scrollIntoView, fixes the app root, and follows visualViewport.offsetTop on both scroll and resize. Bounded form regions can still scroll.
+
+The 320/375/390 px layout tests now shrink the viewport to 340 px, vary its vertical origin through 140/42/0 px, check the answer field and primary actions stay within that visible rectangle, blur before dismissal, restore full height, and check the entered answer survives. These remain Chromium simulations. Actual iPhone Safari and standalone web-app keyboard behavior requires a physical-device check.

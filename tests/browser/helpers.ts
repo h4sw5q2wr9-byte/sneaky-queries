@@ -136,6 +136,7 @@ export async function expectScreenFit(page: Page, allowInternalScroll = false) {
   );
   const result = await page.evaluate(() => {
     const height = window.visualViewport?.height || innerHeight;
+    const top = window.visualViewport?.offsetTop || 0;
     const visible = (el: Element) => el.getClientRects().length > 0;
     const controls = Array.from(
       document.querySelectorAll<HTMLElement>(
@@ -151,7 +152,7 @@ export async function expectScreenFit(page: Page, allowInternalScroll = false) {
       clippedActions: controls
         .filter((el) => {
           const r = el.getBoundingClientRect();
-          return r.bottom > height + 1 || r.top < 0;
+          return r.bottom > top + height + 1 || r.top < top - 1;
         })
         .map((el) => el.getAttribute("aria-label") || el.textContent),
       internal: Array.from(

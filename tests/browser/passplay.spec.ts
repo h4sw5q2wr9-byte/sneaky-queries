@@ -330,4 +330,53 @@ for (const size of [
     await expect(
       page.getByRole("button", { name: t("lockAnswer"), exact: true }),
     ).toBeInViewport();
+    // iOS pans the visual viewport as well as resizing it. The old height-only
+    // mock missed the page lifting out of view when Safari focused the answer.
+    for (const offset of [140, 42, 0]) {
+      await page.evaluate((top) => {
+        Object.defineProperty(window.visualViewport!, "offsetTop", {
+          configurable: true,
+          get: () => top,
+        });
+        window.visualViewport!.dispatchEvent(new Event("scroll"));
+      }, offset);
+      await expect
+        .poll(() =>
+          page
+            .locator("#root")
+            .evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+        )
+        .toBe(offset);
+      await expectScreenFit(page, true);
+      const field = await page
+        .getByRole("textbox", { name: t("answerLabel"), exact: true })
+        .boundingBox();
+      expect(field!.y).toBeGreaterThanOrEqual(offset);
+      expect(field!.y + field!.height).toBeLessThanOrEqual(offset + 340);
+    }
+    // Blurring a field happens before Safari finishes dismissing the keyboard.
+    await page
+      .getByRole("textbox", { name: t("answerLabel"), exact: true })
+      .blur();
+    await expect(page.locator(".app-shell")).toHaveAttribute(
+      "data-keyboard",
+      "true",
+    );
+    await expectScreenFit(page, true);
+    // Dismissing the keyboard restores the full screen without a stale offset.
+    await page.evaluate(() => {
+      Object.defineProperty(window.visualViewport!, "height", {
+        configurable: true,
+        get: () => innerHeight,
+      });
+      window.visualViewport!.dispatchEvent(new Event("resize"));
+    });
+    await expect(page.locator(".app-shell")).toHaveAttribute(
+      "data-keyboard",
+      "false",
+    );
+    await expectScreenFit(page, true);
+    await expect(
+      page.getByRole("textbox", { name: t("answerLabel"), exact: true }),
+    ).toHaveValue("A very long answer ".repeat(8));
   });
