@@ -8,11 +8,8 @@ import {
   Hand,
   Settings2,
   ShieldQuestion,
-  Smartphone,
-  Sparkles,
-  Users,
 } from "lucide-react";
-import { MAX_ANSWER, MAX_NICKNAME } from "../lib/game";
+import { MAX_ANSWER } from "../lib/game";
 import { translate } from "../lib/i18n";
 import type { StringKey } from "../lib/i18n";
 import {
@@ -22,20 +19,25 @@ import {
   LOCAL_STORAGE_KEY,
   LocalGameError,
   localMembers,
-  localSetupError,
   resetLocalSetup,
   restoreLocalGame,
   revealLocalRound,
   startLocalRound,
   submitLocalAnswer,
 } from "../lib/local";
-import type { LocalGame } from "../lib/local";
+import type { LocalGame, LocalPhase } from "../lib/local";
 import type { Locale } from "../lib/types";
 import { Button, Mask, Title } from "./ui";
-import { SettingsFields } from "./SettingsFields";
-import type { SettingsChange } from "./SettingsFields";
-
-export function LocalParty({ locale }: { locale: Locale }) {
+import { SetupWizard } from "./SetupWizard";
+import { Pager } from "./Pager";
+import { RoundDiscussion, RoundReveal } from "./RoundViews";
+export function LocalParty({
+  locale,
+  onPhaseChange,
+}: {
+  locale: Locale;
+  onPhaseChange?: (phase: LocalPhase, locale: Locale) => void;
+}) {
   const t = (key: StringKey) => translate(locale, key);
   const [game, setGame] = useState<LocalGame>(() => {
     try {
@@ -56,12 +58,17 @@ export function LocalParty({ locale }: { locale: Locale }) {
   const [confirmation, setConfirmation] = useState<"setup" | "fresh" | null>(
     null,
   );
+  const [page, setPage] = useState(0);
   const members = localMembers(game);
   const players = Object.entries(members);
   const completed = Object.keys(game.answers).length;
   const allDone = allLocalAnswered(game);
   const player = selected ? members[selected] : null;
-  const setupError = localSetupError(game);
+  const pages = Math.ceil(players.length / 4);
+  const current = Math.min(page, pages - 1);
+  useEffect(() => {
+    onPhaseChange?.(game.phase, game.settings.locale);
+  }, [game.phase, game.settings.locale, onPhaseChange]);
   useEffect(() => {
     const hide = () => {
       setSelected(null);
@@ -87,7 +94,6 @@ export function LocalParty({ locale }: { locale: Locale }) {
     setError(null);
   }
   function commit(next: LocalGame) {
-    // Save synchronously before changing the screen, including the final answer.
     try {
       sessionStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(next));
       setSaveError(false);
@@ -100,15 +106,10 @@ export function LocalParty({ locale }: { locale: Locale }) {
     try {
       commit(action());
       hidePrivate();
+      setPage(0);
     } catch (e) {
       setError(e instanceof LocalGameError ? e.code : "error_unknown");
     }
-  }
-  function updateSettings(change: SettingsChange) {
-    commit({
-      ...game,
-      settings: typeof change === "function" ? change(game.settings) : change,
-    });
   }
   function choose(uid: string) {
     if (Object.hasOwn(game.answers, uid)) return;
@@ -119,39 +120,25 @@ export function LocalParty({ locale }: { locale: Locale }) {
     hidePrivate();
     setConfirmation(kind);
   }
+  function backToCards() {
+    if (
+      players
+        .slice(current * 4, current * 4 + 4)
+        .every(([uid]) => Object.hasOwn(game.answers, uid))
+    ) {
+      const next = players.findIndex(
+        ([uid]) => !Object.hasOwn(game.answers, uid),
+      );
+      setPage(next < 0 ? 0 : Math.floor(next / 4));
+    }
+    setHandoff(false);
+  }
   const roundLabel = `${t("round")} ${game.round}`;
-  const names = (
-    <div className="local-names">
-      <div className="section-label">
-        <h2>{t("localNames")}</h2>
-        <Users size={17} />
-      </div>
-      <p className="field-hint">{t("localNameHint")}</p>
-      <div className="local-name-inputs">
-        {game.names.slice(0, game.settings.capacity).map((name, i) => (
-          <label className="field-label" key={i}>
-            {t("localPlayerName").replace("{n}", String(i + 1))}
-            <input
-              name={`player-${i + 1}`}
-              autoComplete="off"
-              autoCapitalize="words"
-              maxLength={MAX_NICKNAME}
-              required
-              value={name}
-              placeholder={t("nicknamePlaceholder")}
-              onChange={(e) =>
-                commit({
-                  ...game,
-                  names: game.names.map((value, index) =>
-                    index === i ? e.target.value : value,
-                  ),
-                })
-              }
-            />
-          </label>
-        ))}
-      </div>
-    </div>
+  const results = Object.fromEntries(
+    players.map(([uid, m]) => [
+      uid,
+      { nickname: m.nickname, answer: game.answers[uid] },
+    ]),
   );
   let content: ReactNode;
   if (confirmation)
@@ -168,78 +155,71 @@ export function LocalParty({ locale }: { locale: Locale }) {
               : "localAbortConfirm",
           )}
         </h1>
-        <Button
-          onClick={() => {
-            const next =
-              confirmation === "fresh"
-                ? freshLocalGame(locale)
-                : resetLocalSetup(game);
-            setConfirmation(null);
-            apply(() => next);
-          }}
-        >
-          {t("confirm")}
-        </Button>
-        <Button secondary autoFocus onClick={() => setConfirmation(null)}>
-          {t("cancel")}
-        </Button>
+        <div className="action-dock">
+          <Button
+            onClick={() => {
+              const next =
+                confirmation === "fresh"
+                  ? freshLocalGame(locale)
+                  : resetLocalSetup(game);
+              setConfirmation(null);
+              apply(() => next);
+            }}
+          >
+            {t("confirm")}
+          </Button>
+          <Button secondary autoFocus onClick={() => setConfirmation(null)}>
+            {t("cancel")}
+          </Button>
+        </div>
       </div>
     );
   else if (game.phase === "setup")
     content = (
-      <>
-        <Title title={t("localSetupTitle")} sub={t("localSetupSub")} />
-        <form
-          className="panel setup-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            apply(() => startLocalRound(game));
-          }}
-        >
-          <SettingsFields
-            settings={game.settings}
-            onChange={updateSettings}
-            locale={locale}
-            capacityLabel="localPlayerCount"
-          >
-            {names}
-          </SettingsFields>
-          {setupError === "localDuplicateNames" && (
-            <p className="local-validation" role="alert">
-              {t(setupError)}
-            </p>
-          )}
-          <Button type="submit" disabled={!!setupError}>
-            {t("localStart")}
-            <ArrowRight size={18} />
-          </Button>
-          {game.names.some((n) => n.trim()) && (
-            <button
-              className="text-button center-button"
-              type="button"
-              onClick={() => askReset("fresh")}
-            >
-              {t("localFreshParty")}
-            </button>
-          )}
-        </form>
-      </>
+      <SetupWizard
+        mode="local"
+        settings={game.settings}
+        onChange={(settings) => commit({ ...game, settings })}
+        locale={locale}
+        names={game.names}
+        onName={(i, name) =>
+          commit({
+            ...game,
+            names: game.names.map((n, j) => (i === j ? name : n)),
+          })
+        }
+        onComplete={() =>
+          apply(() =>
+            startLocalRound({
+              ...game,
+              settings: { ...game.settings, locale },
+            }),
+          )
+        }
+        completeLabel="localStart"
+        onFresh={
+          game.names.some((n) => n.trim()) ? () => askReset("fresh") : undefined
+        }
+      />
     );
   else if (game.phase === "answering") {
     if (handoff)
       content = (
-        <div className="panel local-handoff">
-          <div className="success-orbit">
-            <Check size={34} />
+        <div className="handoff-screen">
+          <div className="stamp-mark">
+            <Check size={44} />
           </div>
           <Title
             title={t(allDone ? "localAllAnswered" : "localHandoffTitle")}
             sub={t(allDone ? "localAllAnsweredSub" : "localHandoffSub")}
           />
-          <Button onClick={() => setHandoff(false)}>
-            <Hand size={20} />
-            {t("localBackToCards")}
-          </Button>
+          <Hand className="passing-hand" size={30} />
+          <div className="action-dock">
+            <Button onClick={backToCards}>
+              {t("localBackToCards")}
+              <ArrowRight size={18} />
+            </Button>
+          </div>
         </div>
       );
     else if (selected && player && !revealed)
@@ -250,21 +230,20 @@ export function LocalParty({ locale }: { locale: Locale }) {
             title={t("localCoverTitle").replace("{name}", player.nickname)}
             sub={t("localCoverSub")}
           />
-          <div className="panel local-cover">
-            <div className="local-cover-seal">
-              <ShieldQuestion size={44} />
-            </div>
-            <div className={`avatar avatar-${player.slot % 5}`}>
-              {player.nickname.slice(0, 1).toUpperCase()}
-            </div>
-            <h2>{player.nickname}</h2>
+          <div className="face-down-card">
+            <span className="card-corner">SQ</span>
+            <Mask />
+            <span>{t("privateCard")}</span>
+            <span className="card-corner bottom">SQ</span>
+          </div>
+          <div className="action-dock">
             <Button onClick={() => setRevealed(true)}>
-              <Eye size={20} />
+              <Eye size={18} />
               {t("localRevealQuestion")}
             </Button>
-            <Button secondary onClick={hidePrivate}>
+            <button className="text-button" onClick={hidePrivate}>
               {t("localNotMe")}
-            </Button>
+            </button>
           </div>
         </>
       );
@@ -272,9 +251,8 @@ export function LocalParty({ locale }: { locale: Locale }) {
       content = (
         <>
           <Title
-            eyebrow={roundLabel}
+            eyebrow={`${roundLabel} · ${player.nickname}`}
             title={t("privateTitle")}
-            sub={t("privateSub")}
           />
           <form
             className="panel question-panel"
@@ -294,52 +272,62 @@ export function LocalParty({ locale }: { locale: Locale }) {
             }}
           >
             <div className="eyebrow">
-              <ShieldQuestion size={15} />
+              <ShieldQuestion size={14} />
               {t("privateLabel")}
             </div>
-            <div className="local-private-name">{player.nickname}</div>
-            <h2 className="question">
+            <h2 className="question scroll-region">
               {game.vault!.assignments[selected].question}
             </h2>
-            <label className="field-label">
-              {t("answerLabel")}
+            <div className="answer-field">
+              <label htmlFor="local-answer">{t("answerLabel")}</label>
+              <span>
+                {draft.length}/{MAX_ANSWER}
+              </span>
               <textarea
-                autoFocus
+                id="local-answer"
                 required
                 maxLength={MAX_ANSWER}
-                rows={3}
+                rows={2}
                 value={draft}
                 placeholder={t("answerPlaceholder")}
                 onChange={(e) => setDraft(e.target.value)}
               />
-            </label>
-            <div className="answer-count">
-              {draft.length}/{MAX_ANSWER}
             </div>
-            <Button type="submit" disabled={!draft.trim()}>
-              <Check size={18} />
-              {t("lockAnswer")}
-            </Button>
-            <p className="field-hint center">{t("answerHint")}</p>
-            <button
-              className="text-button center-button"
-              type="button"
-              onClick={() => setRevealed(false)}
-            >
-              <EyeOff size={16} />
-              {t("localHideQuestion")}
-            </button>
+            <p className="field-hint">{t("answerHint")}</p>
+            <div className="action-dock question-actions">
+              <button
+                className="icon-button hide-question"
+                type="button"
+                aria-label={t("localHideQuestion")}
+                onClick={() => setRevealed(false)}
+              >
+                <EyeOff size={20} />
+              </button>
+              <Button type="submit" disabled={!draft.trim()}>
+                <Check size={18} />
+                {t("lockAnswer")}
+              </Button>
+            </div>
           </form>
         </>
       );
     else
       content = (
         <>
-          <Title
-            eyebrow={roundLabel}
-            title={t("localCardsTitle")}
-            sub={t("localCardsSub")}
-          />
+          <div className="title-with-action">
+            <Title
+              eyebrow={roundLabel}
+              title={t("localCardsTitle")}
+              sub={t("localCardsSub")}
+            />
+            <button
+              className="icon-button"
+              aria-label={t("changeSetup")}
+              onClick={() => askReset("setup")}
+            >
+              <Settings2 size={18} />
+            </button>
+          </div>
           <div className="local-progress">
             <span aria-live="polite">
               {completed}/{players.length} {t("submitted")}
@@ -357,143 +345,84 @@ export function LocalParty({ locale }: { locale: Locale }) {
               />
             </div>
           </div>
-          <div className="name-card-grid">
-            {players.map(([uid, member]) => {
-              const locked = Object.hasOwn(game.answers, uid);
-              return (
-                <button
-                  key={uid}
-                  className={`name-card ${locked ? "answered" : ""}`}
-                  disabled={locked}
-                  aria-label={`${member.nickname}, ${t(locked ? "localLocked" : "localChooseName")}`}
-                  onClick={() => choose(uid)}
-                >
-                  <span className={`avatar avatar-${member.slot % 5}`}>
-                    {member.nickname.slice(0, 1).toUpperCase()}
-                  </span>
-                  <span className="name-card-title">{member.nickname}</span>
-                  <span className="name-card-status">
-                    {locked ? <Check size={14} /> : <Hand size={14} />}{" "}
-                    {t(locked ? "localLocked" : "localTurnReady")}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="name-card-grid" key={current}>
+            {players
+              .slice(current * 4, current * 4 + 4)
+              .map(([uid, member], i) => {
+                const locked = Object.hasOwn(game.answers, uid);
+                return (
+                  <button
+                    key={uid}
+                    className={`name-card ${locked ? "answered" : ""}`}
+                    style={{ animationDelay: `${i * 45}ms` }}
+                    disabled={locked}
+                    aria-label={`${member.nickname}, ${t(locked ? "localLocked" : "localChooseName")}`}
+                    onClick={() => choose(uid)}
+                  >
+                    <span className={`avatar avatar-${member.slot % 5}`}>
+                      {Array.from(member.nickname)[0]?.toUpperCase()}
+                    </span>
+                    <span className="name-card-copy">
+                      <span className="name-card-title">{member.nickname}</span>
+                      <span className="name-card-status">
+                        {locked ? <Check size={12} /> : <Hand size={12} />}{" "}
+                        {t(locked ? "localLocked" : "localTurnReady")}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
           </div>
-          <Button
-            disabled={!allDone}
-            onClick={() => apply(() => discussLocalRound(game))}
-          >
-            {t("localContinue")}
-            <ArrowRight size={18} />
-          </Button>
-          <p className="field-hint center">
-            {t(allDone ? "localAllAnsweredSub" : "localFinishFirst")}
-          </p>
-          <button
-            className="text-button center-button"
-            onClick={() => askReset("setup")}
-          >
-            <Settings2 size={15} />
-            {t("changeSetup")}
-          </button>
+          <Pager
+            page={current}
+            total={pages}
+            onChange={setPage}
+            locale={locale}
+            label={t("cardsPage")}
+          />
+          <div className="action-dock">
+            <Button
+              disabled={!allDone}
+              onClick={() => apply(() => discussLocalRound(game))}
+            >
+              {t("localContinue")}
+              <ArrowRight size={18} />
+            </Button>
+          </div>
         </>
       );
   } else if (game.phase === "discussion")
     content = (
-      <>
-        <Title
-          eyebrow={`${roundLabel} · ${t("answers")}`}
-          title={t("discussionTitle")}
-          sub={t("localDiscussSub")}
-        />
-        <div className="panel original-panel">
-          <div className="eyebrow">{t("original")}</div>
-          <h2 className="question">{game.vault!.original}</h2>
-        </div>
-        <div className="answer-list">
-          {players.map(([uid, member], i) => (
-            <div
-              className="answer-card"
-              key={uid}
-              style={{ animationDelay: `${i * 55}ms` }}
-            >
-              <div className={`avatar avatar-${i % 5}`}>
-                {member.nickname.slice(0, 1).toUpperCase()}
-              </div>
-              <div>
-                <span className="answer-name">{member.nickname}</span>
-                <p>{game.answers[uid]}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <Button onClick={() => apply(() => revealLocalRound(game))}>
-          <Eye size={20} />
-          {t("revealButton")}
-        </Button>
-      </>
+      <RoundDiscussion
+        locale={locale}
+        round={game.round}
+        original={game.vault!.original}
+        answers={results}
+        onReveal={() => apply(() => revealLocalRound(game))}
+      />
     );
   else
     content = (
-      <div className="reveal-screen">
-        <div className="reveal-emblem">
-          <Mask />
-        </div>
-        <Title
-          eyebrow={`${roundLabel} · ${t("revealLabel")}`}
-          title={t("revealTitle")}
-          sub={t("revealSub")}
-        />
-        <div className="reveal-list">
-          {Object.entries(game.vault!.impostors).map(([uid, p], i) => (
-            <div
-              className="panel impostor-card"
-              key={uid}
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
-              <div className="reveal-person">
-                <span className="reveal-avatar">
-                  {p.nickname.slice(0, 1).toUpperCase()}
-                </span>
-                <div>
-                  <h2>{p.nickname}</h2>
-                  <span className="variation">
-                    {t(
-                      p.variation === "I1"
-                        ? "opposite"
-                        : p.variation === "I2"
-                          ? "shifted"
-                          : "different",
-                    )}
-                  </span>
-                </div>
-                <Sparkles size={24} />
-              </div>
-              <div className="eyebrow">{t("theirQuestion")}</div>
-              <p className="revealed-question">{p.question}</p>
-              <p className="quote">“{game.answers[uid]}”</p>
-            </div>
-          ))}
-        </div>
-        <div className="panel normal-card">
-          <div className="eyebrow">{t("normalQuestion")}</div>
-          <h2>{game.vault!.original}</h2>
-        </div>
-        <div className="replay-actions">
-          <Button onClick={() => apply(() => startLocalRound(game))}>
-            {t("playAgain")}
-            <ArrowRight size={18} />
-          </Button>
-          <Button secondary onClick={() => apply(() => resetLocalSetup(game))}>
-            <Settings2 size={18} />
-            {t("changeSetup")}
-          </Button>
-        </div>
-      </div>
+      <RoundReveal
+        locale={locale}
+        round={game.round}
+        original={game.vault!.original}
+        answers={results}
+        impostors={game.vault!.impostors}
+        onReplay={() =>
+          apply(() =>
+            startLocalRound({
+              ...game,
+              settings: { ...game.settings, locale },
+            }),
+          )
+        }
+        onSetup={() => apply(() => resetLocalSetup(game))}
+      />
     );
-  const stage =
-    confirmation || game.phase !== "answering"
+  const stage = confirmation
+    ? "confirm"
+    : game.phase !== "answering"
       ? game.phase
       : handoff
         ? "handoff"
@@ -503,11 +432,7 @@ export function LocalParty({ locale }: { locale: Locale }) {
             : "cover"
           : "cards";
   return (
-    <div className="narrow local-party">
-      <div className="local-mode-label">
-        <Smartphone size={14} />
-        {t("localModeHint")}
-      </div>
+    <div className="narrow local-party" data-stage={stage}>
       {saveError && (
         <div className="notice" role="status">
           {t("localSaveError")}
@@ -518,7 +443,7 @@ export function LocalParty({ locale }: { locale: Locale }) {
           {t(error)}
         </div>
       )}
-      <div className="screen-enter" key={`${game.round}-${stage}`}>
+      <div className="stage-screen screen-enter" key={`${game.round}-${stage}`}>
         {content}
       </div>
     </div>

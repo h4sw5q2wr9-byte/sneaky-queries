@@ -1,42 +1,49 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   ArrowRight,
   ArrowLeft,
   Check,
   ChevronDown,
   Copy,
-  Eye,
   HelpCircle,
   Link,
   LoaderCircle,
   LogOut,
-  MessageCircle,
   Plus,
   Radio,
   Settings2,
   ShieldQuestion,
-  Sparkles,
   Smartphone,
   Users,
   WifiOff,
   X,
 } from "lucide-react";
-import { Button, Mask, Title } from "./components/ui";
-import { SettingsFields } from "./components/SettingsFields";
+import { Button, ConfirmDialog, Mask, Title } from "./components/ui";
+import { SetupWizard } from "./components/SetupWizard";
 import { LocalParty } from "./components/LocalParty";
+import { HowToPlay } from "./components/HowToPlay";
+import { PlayerRoster } from "./components/PlayerRoster";
+import { RoundDiscussion, RoundReveal } from "./components/RoundViews";
 import { configured, emulator, identity } from "./lib/firebase";
 import { defaultSettings, validSetup } from "./lib/game";
 import { localeDirection, translate } from "./lib/i18n";
 import type { StringKey } from "./lib/i18n";
+import type { LocalPhase } from "./lib/local";
 import * as api from "./lib/rooms";
 import type { Locale, RoomState, Settings } from "./lib/types";
-
-type Screen = "home" | "how" | "create" | "join" | "config" | "local";
+type Screen =
+  "home" | "how" | "online" | "create" | "join" | "config" | "local";
 const savedLocale = (): Locale =>
   localStorage.getItem("sq-locale") === "nl" ? "nl" : "en";
 export default function App() {
   const [locale, setLocale] = useState<Locale>(savedLocale);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [localPhase, setLocalPhase] = useState<LocalPhase>("setup");
+  const onLocalPhase = useCallback((phase: LocalPhase, roundLocale: Locale) => {
+    setLocalPhase(phase);
+    if (phase !== "setup") setLocale(roundLocale);
+  }, []);
   const t = useCallback((key: StringKey) => translate(locale, key), [locale]);
   const invite = new URLSearchParams(location.search).get("room") || "";
   const [screen, setScreen] = useState<Screen>(
@@ -103,6 +110,43 @@ export default function App() {
     document.documentElement.lang = locale;
     document.documentElement.dir = localeDirection(locale);
   }, [locale]);
+  useEffect(() => {
+    setSettings((current) => ({ ...current, locale }));
+  }, [locale]);
+  useEffect(() => {
+    if (meta?.settings.locale) setLocale(meta.settings.locale);
+  }, [meta?.settings.locale]);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const resize = () => {
+      const height =
+        viewport?.scale === 1 ? viewport.height : window.innerHeight;
+      document.documentElement.style.setProperty("--app-height", height + "px");
+      const editingField =
+        document.activeElement instanceof HTMLElement &&
+        ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName);
+      setKeyboardVisible(!!editingField && height < window.innerHeight * 0.8);
+      if (
+        height < window.innerHeight * 0.8 &&
+        document.activeElement instanceof HTMLElement &&
+        ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
+      )
+        requestAnimationFrame(() =>
+          document.activeElement?.scrollIntoView({ block: "nearest" }),
+        );
+    };
+    resize();
+    viewport?.addEventListener("resize", resize);
+    window.addEventListener("resize", resize);
+    document.addEventListener("focusin", resize);
+    document.addEventListener("focusout", resize);
+    return () => {
+      viewport?.removeEventListener("resize", resize);
+      window.removeEventListener("resize", resize);
+      document.removeEventListener("focusin", resize);
+      document.removeEventListener("focusout", resize);
+    };
+  }, []);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -225,77 +269,39 @@ export default function App() {
   }
   const ask = (text: string, task: () => Promise<void>) =>
     setConfirm({ text, run: task });
-  const playerList = (removable = false) => (
-    <div className="player-list">
-      {list.map(([id, m], index) => (
-        <div className="player-row" key={id}>
-          <span className={`avatar avatar-${index % 5}`}>
-            {m.nickname.slice(0, 1).toUpperCase()}
-          </span>
-          <div className="player-name">
-            {m.nickname} <small>{id === uid && `(${t("you")})`}</small>
-            {id === meta?.hostId && (
-              <span className="host-tag">{t("host")}</span>
-            )}
-            <span className="player-status">
-              {!room?.presence[id]?.online
-                ? t("offline")
-                : meta?.phase === "lobby"
-                  ? m.ready
-                    ? t("ready")
-                    : t("notReady")
-                  : room?.submitted[id] === meta?.roundId
-                    ? t("ready")
-                    : t("notReady")}
-            </span>
-          </div>
-          {m.ready && meta?.phase === "lobby" ? (
-            <Check size={18} className="mint" />
-          ) : (
-            <span
-              className={`presence-dot ${room?.presence[id]?.online ? "on" : ""}`}
-            />
-          )}{" "}
-          {removable && host && id !== uid && (
-            <button
-              className="icon-button remove"
-              aria-label={`${t("remove")} ${m.nickname}`}
-              onClick={() =>
+  const languageDisabled = roomCode
+    ? !host || meta?.phase !== "lobby" || pending || !connected
+    : screen === "local" && localPhase !== "setup";
+  function changeLanguage(next: Locale) {
+    if (languageDisabled) return;
+    if (roomCode && meta) {
+      void act(() =>
+        api.saveSettings(roomCode, { ...meta.settings, locale: next }),
+      );
+    } else setLocale(next);
+  }
+  const roster = (removable = false) =>
+    meta && room ? (
+      <PlayerRoster
+        members={members}
+        presence={room.presence}
+        submitted={room.submitted}
+        uid={uid}
+        hostId={meta.hostId}
+        roundId={meta.roundId}
+        phase={meta.phase}
+        locale={locale}
+        onRemove={
+          removable && host
+            ? (id) =>
                 ask(t("removeConfirm"), () => api.removePlayer(roomCode, id))
-              }
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-  const setupFields = (inRoom = false) => (
-    <SettingsFields
-      settings={settings}
-      onChange={setSettings}
-      locale={locale}
-      minPlayers={inRoom ? count : 3}
-    />
-  );
-  const formNickname = (
-    <label className="field-label">
-      {t("nickname")}
-      <input
-        name="nickname"
-        autoComplete="nickname"
-        maxLength={20}
-        required
-        value={nickname}
-        onChange={(e) => setNickname(e.target.value)}
-        placeholder={t("nicknamePlaceholder")}
+            : undefined
+        }
       />
-    </label>
-  );
+    ) : null;
   const loading = (
     <div className="center-state">
-      <LoaderCircle className="spin" size={32} />
+      <LoaderCircle className="spin" size={30} />
       <p>{t("loading")}</p>
       {error && (
         <Button secondary onClick={exit}>
@@ -309,14 +315,14 @@ export default function App() {
     if (!meta) content = loading;
     else if (meta.expiresAt < now)
       content = (
-        <div className="panel">
+        <div className="narrow center-state">
           <Title title={t("expiredTitle")} sub={t("expiredBody")} />
           <Button onClick={exit}>{t("returnHome")}</Button>
         </div>
       );
     else if (!me)
       content = (
-        <div className="panel">
+        <div className="narrow center-state">
           <Title title={t("removedTitle")} sub={t("removedBody")} />
           <Button onClick={exit}>{t("returnHome")}</Button>
         </div>
@@ -324,45 +330,42 @@ export default function App() {
     else if (editing && host)
       content = (
         <div className="narrow">
-          <Title title={t("currentSetup")} />
-          <form
-            className="panel"
-            onSubmit={(e) => {
-              e.preventDefault();
+          <SetupWizard
+            mode="edit"
+            onCancel={() => setEditing(false)}
+            settings={settings}
+            onChange={setSettings}
+            locale={locale}
+            minPlayers={Math.max(3, count)}
+            pending={pending}
+            completeLabel="save"
+            onComplete={() =>
               void act(async () => {
-                await api.saveSettings(roomCode, settings);
+                await api.saveSettings(roomCode, { ...settings, locale });
                 setEditing(false);
-              });
-            }}
-          >
-            {setupFields(true)}
-            <Button disabled={pending || !connected} type="submit">
-              {t("save")}
-              <Check size={18} />
-            </Button>
-            <Button secondary type="button" onClick={() => setEditing(false)}>
-              {t("cancel")}
-            </Button>
-          </form>
+              })
+            }
+          />
         </div>
       );
     else if (meta.phase === "lobby")
       content = (
-        <div className="narrow">
-          <Title
-            eyebrow={t("round") + " " + (meta.round + 1)}
-            title={t("lobbyTitle")}
-            sub={t("lobbySub")}
-          />
+        <div className="narrow lobby-screen">
+          <Title title={t("lobbyTitle")} sub={t("lobbySub")} />
           <div className="panel invite-panel">
-            <span className="eyebrow">{t("invite")}</span>
-            <div className="room-code" aria-label={t("roomCode")}>
-              {roomCode}
+            <div>
+              <span className="eyebrow">{t("roomCode")}</span>
+              <div className="room-code" aria-label={t("roomCode")}>
+                {roomCode}
+              </div>
             </div>
             <div className="invite-actions">
-              <button className="text-button" onClick={() => void copyInvite()}>
-                {copied ? <Check size={16} /> : <Copy size={16} />}{" "}
-                {copied ? t("copied") : t("copy")}
+              <button
+                className="icon-button"
+                aria-label={t("copy")}
+                onClick={() => void copyInvite()}
+              >
+                {copied ? <Check size={18} /> : <Copy size={18} />}
               </button>
               <button
                 className="icon-button"
@@ -381,17 +384,16 @@ export default function App() {
               />
             )}
           </div>
-          <div className="panel">
+          <div className="lobby-roster">
             <div className="section-label">
-              <h2>
-                <Users size={18} />{" "}
-                {t("players").replace("3–10", String(count))}
-              </h2>
+              <h2>{t("players")}</h2>
               <span>
                 {count}/{meta.settings.capacity}
               </span>
             </div>
-            {playerList(true)}
+            {roster(true)}
+          </div>
+          <div className="action-dock lobby-actions">
             <Button
               secondary
               disabled={pending || !connected}
@@ -399,44 +401,47 @@ export default function App() {
                 void act(() => api.ready(roomCode, uid, !me.ready))
               }
             >
-              {me.ready ? <Check size={18} /> : <Plus size={18} />}{" "}
-              {me.ready ? t("unready") : t("readyButton")}
+              {me.ready ? <Check size={17} /> : <Plus size={17} />}{" "}
+              {t(me.ready ? "unready" : "readyButton")}
             </Button>
-            {host ? (
-              <>
-                <Button
-                  disabled={
-                    pending ||
-                    !connected ||
-                    !allReady ||
-                    !validSetup(count, meta.settings.impostors)
-                  }
-                  onClick={() => void act(() => api.startRound(roomCode))}
-                >
-                  {t("start")}
-                  <ArrowRight size={18} />
-                </Button>
-                <p className="field-hint center">
-                  {count < 3
-                    ? t("needPlayers")
-                    : !validSetup(count, meta.settings.impostors)
-                      ? t("error_setup")
-                      : !allReady
-                        ? t("waitReady")
-                        : ""}
-                </p>
-                <button
-                  className="text-button center-button"
-                  onClick={() => {
-                    setSettings(meta.settings);
-                    setEditing(true);
-                  }}
-                >
-                  <Settings2 size={15} /> {t("changeSetup")}
-                </button>
-              </>
-            ) : (
-              <p className="field-hint center">{t("waitHost")}</p>
+            {host && (
+              <Button
+                disabled={
+                  pending ||
+                  !connected ||
+                  !allReady ||
+                  !validSetup(count, meta.settings.impostors)
+                }
+                onClick={() => void act(() => api.startRound(roomCode))}
+              >
+                {t("start")}
+                <ArrowRight size={17} />
+              </Button>
+            )}
+          </div>
+          <div className="lobby-caption">
+            <p className="field-hint">
+              {count < 3
+                ? t("needPlayers")
+                : !validSetup(count, meta.settings.impostors)
+                  ? t("error_setup")
+                  : !allReady
+                    ? t("waitReady")
+                    : host
+                      ? ""
+                      : t("waitHost")}
+            </p>
+            {host && (
+              <button
+                className="icon-button"
+                aria-label={t("changeSetup")}
+                onClick={() => {
+                  setSettings(meta.settings);
+                  setEditing(true);
+                }}
+              >
+                <Settings2 size={17} />
+              </button>
             )}
           </div>
         </div>
@@ -444,16 +449,18 @@ export default function App() {
     else if (meta.phase === "answering") {
       const sent = room?.submitted[uid] === meta.roundId;
       content = (
-        <div className="narrow">
+        <div
+          className={`narrow ${sent ? "waiting-screen" : "question-screen"}`}
+        >
           <Title
             eyebrow={`${t("round")} ${meta.round}`}
             title={t(sent ? "waitingTitle" : "privateTitle")}
-            sub={t(sent ? "waitingSub" : "privateSub")}
+            sub={sent ? t("waitingSub") : undefined}
           />
           {!sent ? (
             <form
               className="panel question-panel"
-              onSubmit={(e: FormEvent) => {
+              onSubmit={(e) => {
                 e.preventDefault();
                 void act(() =>
                   api.submitAnswer(roomCode, uid, meta.roundId, answer),
@@ -461,51 +468,53 @@ export default function App() {
               }}
             >
               <div className="eyebrow">
-                <ShieldQuestion size={15} />
+                <ShieldQuestion size={14} />
                 {t("privateLabel")}
               </div>
               {room?.assignment?.roundId === meta.roundId ? (
-                <h2 className="question">{room.assignment.question}</h2>
+                <h2 className="question scroll-region">
+                  {room.assignment.question}
+                </h2>
               ) : (
                 <LoaderCircle className="spin" />
               )}
-              <label className="field-label">
-                {t("answerLabel")}
+              <div className="answer-field">
+                <label htmlFor="online-answer">{t("answerLabel")}</label>
+                <span>{answer.length}/160</span>
                 <textarea
+                  id="online-answer"
                   maxLength={160}
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   placeholder={t("answerPlaceholder")}
                   required
-                  rows={3}
+                  rows={2}
                 />
-              </label>
-              <div className="answer-count">{answer.length}/160</div>
-              <Button
-                type="submit"
-                disabled={
-                  pending ||
-                  !connected ||
-                  !answer.trim() ||
-                  room?.assignment?.roundId !== meta.roundId
-                }
-              >
-                {pending ? (
-                  <LoaderCircle className="spin" size={18} />
-                ) : (
-                  <Check size={18} />
-                )}{" "}
-                {t("lockAnswer")}
-              </Button>
-              <p className="field-hint center">{t("answerHint")}</p>
-              <div className="round-progress" aria-live="polite">
-                {completed}/{count} {t("submitted")}
+              </div>
+              <p className="field-hint">{t("answerHint")}</p>
+              <div className="action-dock">
+                <Button
+                  type="submit"
+                  disabled={
+                    pending ||
+                    !connected ||
+                    !answer.trim() ||
+                    room?.assignment?.roundId !== meta.roundId
+                  }
+                >
+                  {pending ? (
+                    <LoaderCircle className="spin" size={17} />
+                  ) : (
+                    <Check size={17} />
+                  )}{" "}
+                  {t("lockAnswer")}
+                </Button>
               </div>
             </form>
           ) : (
             <div className="panel waiting-panel">
-              <div className="success-orbit">
-                <Check size={34} />
+              <div className="stamp-mark">
+                <Check size={40} />
               </div>
               <div className="progress-numbers">
                 {completed}
@@ -526,7 +535,7 @@ export default function App() {
                   }}
                 />
               </div>
-              <p className="field-hint">
+              <p className="field-hint scroll-region">
                 {completed === count
                   ? t("allAnswered")
                   : t("waitingPlayers") +
@@ -545,7 +554,7 @@ export default function App() {
                 <ChevronDown size={16} />
               </summary>
               <p className="field-hint">{t("missingPlayers")}</p>
-              {playerList(true)}
+              {roster(true)}
               {completed === count && (
                 <button
                   className="text-button"
@@ -568,367 +577,241 @@ export default function App() {
         </div>
       );
     } else if (meta.phase === "discussion")
-      content = (
-        <div className="narrow">
-          <Title
-            eyebrow={`${t("round")} ${meta.round} · ${t("answers")}`}
-            title={t("discussionTitle")}
-            sub={t("discussionSub")}
+      content =
+        room?.discussion?.roundId === meta.roundId ? (
+          <RoundDiscussion
+            locale={locale}
+            round={meta.round}
+            original={room.discussion.original}
+            answers={room.discussion.answers}
+            onReveal={
+              host ? () => void act(() => api.revealRound(roomCode)) : undefined
+            }
+            disabled={pending || !connected}
           />
-          {room?.discussion?.roundId === meta.roundId ? (
-            <>
-              <div className="panel original-panel">
-                <div className="eyebrow">{t("original")}</div>
-                <h2 className="question">{room.discussion.original}</h2>
-              </div>
-              <div className="answer-list">
-                {Object.entries(room.discussion.answers).map(([id, a], i) => (
-                  <div
-                    key={id}
-                    className="answer-card"
-                    style={{ animationDelay: `${i * 55}ms` }}
-                  >
-                    <div className={`avatar avatar-${i % 5}`}>
-                      {a.nickname.slice(0, 1).toUpperCase()}
-                    </div>
-                    <div>
-                      <span className="answer-name">{a.nickname}</span>
-                      <p>{a.answer}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {host ? (
-                <Button
-                  disabled={pending || !connected}
-                  onClick={() => void act(() => api.revealRound(roomCode))}
-                >
-                  <Eye size={20} />
-                  {t("revealButton")}
-                </Button>
-              ) : (
-                <p className="field-hint center">{t("hostReveal")}</p>
-              )}
-            </>
-          ) : (
-            loading
-          )}
-        </div>
-      );
+        ) : (
+          loading
+        );
     else
-      content = (
-        <div className="narrow reveal-screen">
-          <div className="reveal-emblem">
-            <Mask />
-          </div>
-          <Title
-            eyebrow={`${t("round")} ${meta.round} · ${t("revealLabel")}`}
-            title={t("revealTitle")}
-            sub={t("revealSub")}
+      content =
+        room?.reveal?.roundId === meta.roundId && room.discussion ? (
+          <RoundReveal
+            locale={locale}
+            round={meta.round}
+            original={room.discussion.original}
+            answers={room.discussion.answers}
+            impostors={room.reveal.impostors}
+            onReplay={
+              host ? () => void act(() => api.startRound(roomCode)) : undefined
+            }
+            onSetup={
+              host ? () => void act(() => api.resetRoom(roomCode)) : undefined
+            }
+            disabled={
+              pending ||
+              !connected ||
+              !allReady ||
+              !validSetup(count, meta.settings.impostors)
+            }
+            setupDisabled={pending || !connected}
           />
-          {room?.reveal?.roundId === meta.roundId ? (
-            <>
-              <div className="reveal-list">
-                {Object.entries(room.reveal.impostors).map(([id, p], i) => (
-                  <div
-                    className="panel impostor-card"
-                    key={id}
-                    style={{ animationDelay: `${i * 100}ms` }}
-                  >
-                    <div className="reveal-person">
-                      <span className="reveal-avatar">
-                        {p.nickname.slice(0, 1).toUpperCase()}
-                      </span>
-                      <div>
-                        <h2>{p.nickname}</h2>
-                        <span className="variation">
-                          {t(
-                            p.variation === "I1"
-                              ? "opposite"
-                              : p.variation === "I2"
-                                ? "shifted"
-                                : "different",
-                          )}
-                        </span>
-                      </div>
-                      <Sparkles size={24} />
-                    </div>
-                    <div className="eyebrow">{t("theirQuestion")}</div>
-                    <p className="revealed-question">{p.question}</p>
-                    {room.discussion?.answers[id] && (
-                      <p className="quote">
-                        “{room.discussion.answers[id].answer}”
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div className="panel normal-card">
-                <div className="eyebrow">{t("normalQuestion")}</div>
-                <h2>{room?.discussion?.original}</h2>
-              </div>
-              {host ? (
-                <div className="replay-actions">
-                  <Button
-                    disabled={
-                      pending ||
-                      !connected ||
-                      !allReady ||
-                      !validSetup(count, meta.settings.impostors)
-                    }
-                    onClick={() => void act(() => api.startRound(roomCode))}
-                  >
-                    {t("playAgain")}
-                    <ArrowRight size={18} />
-                  </Button>
-                  <Button
-                    secondary
-                    disabled={pending || !connected}
-                    onClick={() => void act(() => api.resetRoom(roomCode))}
-                  >
-                    <Settings2 size={18} />
-                    {t("changeSetup")}
-                  </Button>
-                  {!allReady && (
-                    <p className="field-hint center">{t("waitReady")}</p>
-                  )}
-                </div>
-              ) : (
-                <p className="field-hint center">{t("waitReplay")}</p>
-              )}
-            </>
-          ) : (
-            <p className="center">{t("revealWait")}</p>
-          )}
-        </div>
-      );
-  } else if (screen === "local") content = <LocalParty locale={locale} />;
+        ) : (
+          loading
+        );
+  } else if (screen === "local")
+    content = <LocalParty locale={locale} onPhaseChange={onLocalPhase} />;
   else if (screen === "home")
     content = (
-      <>
-        <section className="hero">
-          <div className="hero-copy">
-            <span className="pill">
-              <span />
-              {t("edition")}
+      <section className="home-screen">
+        <div className="home-deck" aria-hidden="true">
+          <div className="deck-card back">?</div>
+          <div className="deck-card front">
+            <span>SQ</span>
+            <Mask />
+            <i>?</i>
+          </div>
+          <span className="deck-spark one">✦</span>
+          <span className="deck-spark two">✧</span>
+        </div>
+        <div className="home-heading">
+          <h1>
+            {t("hero1")} <span>{t("hero2")}</span>
+          </h1>
+          <p>{t("intro")}</p>
+        </div>
+        <div className="mode-options">
+          <button
+            className="mode-card pass-play-entry"
+            aria-label={t("passPlay")}
+            onClick={() => go("local")}
+          >
+            <span className="mode-icon">
+              <Smartphone size={22} />
             </span>
-            <h1>
-              {t("hero1")}
-              <br />
-              <span>{t("hero2")}</span>
-            </h1>
-            <p className="hero-description">{t("intro")}</p>
-            <div className="hero-actions">
-              <Button onClick={() => go("create")}>
-                <Plus size={21} />
-                {t("create")}
-                <ArrowRight size={18} />
-              </Button>
-              <Button secondary onClick={() => go("join")}>
-                <Users size={20} />
-                {t("join")}
-              </Button>
-            </div>
-            <button
-              aria-label={t("passPlay")}
-              className="pass-play-entry"
-              onClick={() => go("local")}
-            >
-              <span className="pass-play-icon">
-                <Smartphone size={23} />
-              </span>
-              <span>
-                <strong>{t("passPlay")}</strong>
-                <small>{t("passPlaySub")}</small>
-              </span>
-              <ArrowRight size={18} />
-            </button>
-            <div className="feature-row">
-              <span>
-                <Users size={15} />
-                {t("players")}
-              </span>
-              <span>
-                <Radio size={15} />
-                {t("phones")}
-              </span>
-              <span className="free-tag">{t("free")}</span>
-            </div>
-          </div>
-          <div className="hero-art" aria-hidden="true">
-            <span className="art-orbit orbit-one" />
-            <span className="art-orbit orbit-two" />
-            <span className="art-star star-one">✦</span>
-            <span className="art-star star-two">✧</span>
-            <span className="art-dot" />
-            <div className="floating-question question-back">
-              <span>?</span>
-              <i />
-              <i />
-            </div>
-            <div className="floating-question question-front">
-              <div className="card-mini-logo">
-                <Mask small /> SQ
-              </div>
-              <Mask />
-              <div className="secret-lines">
-                <i />
-                <i />
-              </div>
-              <span className="card-bottom">{t("cardTagline")}</span>
-            </div>
-            <div className="floating-bubble bubble-one">👀</div>
-            <div className="floating-bubble bubble-two">🤔</div>
-            <span className="art-scribble">{t("whoMe")}</span>
-          </div>
-        </section>
-        <section className="home-bottom">
-          <div className="section-label">
-            <span className="eyebrow">{t("how")}</span>
-            <button className="text-button" onClick={() => go("how")}>
-              {t("navHow")}
-              <ArrowRight size={15} />
-            </button>
-          </div>
-          <div className="teaser-grid">
-            {[1, 2, 3].map((n) => (
-              <div className="teaser" key={n}>
-                <span className="step-number">0{n}</span>
-                <div>
-                  <h2>{t(`step${n}` as StringKey)}</h2>
-                  <p>{t(`step${n}body` as StringKey)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </>
+            <span>
+              <strong>{t("passPlay")}</strong>
+              <small>{t("passPlaySub")}</small>
+            </span>
+            <ArrowRight size={18} />
+          </button>
+          <button
+            className="mode-card online-entry"
+            aria-label={t("onlineMode")}
+            onClick={() => go("online")}
+          >
+            <span className="mode-icon">
+              <Users size={22} />
+            </span>
+            <span>
+              <strong>{t("onlineMode")}</strong>
+              <small>{t("onlineSub")}</small>
+            </span>
+            <ArrowRight size={18} />
+          </button>
+        </div>
+        <div className="home-facts">
+          <span>{t("players")}</span>
+          <i />
+          <span>{t("free")}</span>
+        </div>
+      </section>
     );
-  else if (screen === "how")
+  else if (screen === "online")
     content = (
-      <div className="narrow">
-        <Title title={t("how")} sub={t("howSub")} />
-        <div className="panel how-panel">
-          {[1, 2, 3, 4].map((n) => (
-            <div className="how-step" key={n}>
-              <span className="step-number">0{n}</span>
-              <div>
-                <h2>{t(`step${n}` as StringKey)}</h2>
-                <p>{t(`step${n}body` as StringKey)}</p>
-              </div>
-            </div>
-          ))}
-          <div className="local-how-note">
-            <Smartphone size={20} />
-            <div>
-              <h2>{t("localHowTitle")}</h2>
-              <p>{t("localHowBody")}</p>
-              <button className="text-button" onClick={() => go("local")}>
-                {t("passPlay")}
-                <ArrowRight size={16} />
-              </button>
-            </div>
-          </div>
-          <p className="how-note">
-            <Sparkles size={18} />
-            {t("howNote")}
-          </p>
+      <section className="narrow online-choice">
+        <div className="choice-symbol">
+          <Users size={40} />
+        </div>
+        <Title title={t("onlineTitle")} sub={t("onlineHint")} />
+        <div className="choice-actions">
           <Button onClick={() => go("create")}>
+            <Plus size={18} />
             {t("create")}
             <ArrowRight size={18} />
           </Button>
+          <Button secondary onClick={() => go("join")}>
+            <Users size={18} />
+            {t("join")}
+          </Button>
         </div>
-      </div>
+      </section>
     );
-  else if (screen === "config")
+  else if (screen === "how")
+    content = <HowToPlay locale={locale} onPlay={() => go("home")} />;
+  else if (screen === "create")
     content = (
       <div className="narrow">
-        <div className="panel config-panel">
-          <Settings2 size={36} />
-          <Title
-            eyebrow={t("configLabel")}
-            title={t("configTitle")}
-            sub={t("configBody")}
-          />
-          <code>.env.local → npm run build</code>
-          <Button onClick={() => go("home")}>{t("returnHome")}</Button>
-        </div>
-      </div>
-    );
-  else
-    content = (
-      <div className="narrow">
-        <Title
-          title={t(screen === "create" ? "setupTitle" : "joinTitle")}
-          sub={t(screen === "create" ? "setupSub" : "joinSub")}
+        <SetupWizard
+          mode="online"
+          settings={settings}
+          onChange={setSettings}
+          locale={locale}
+          nickname={nickname}
+          onNickname={setNickname}
+          pending={pending}
+          completeLabel="createButton"
+          onComplete={() => {
+            if (!configured) {
+              go("config");
+              return;
+            }
+            void act(async () =>
+              enter(await api.createRoom(nickname, { ...settings, locale })),
+            );
+          }}
         />
+      </div>
+    );
+  else if (screen === "join")
+    content = (
+      <section className="narrow join-screen">
+        <Title title={t("joinTitle")} sub={t("joinSub")} />
         <form
-          className="panel setup-form"
+          className="panel join-form"
           onSubmit={(e) => {
             e.preventDefault();
             if (!configured) {
               go("config");
               return;
             }
-            void act(async () => {
-              const code =
-                screen === "create"
-                  ? await api.createRoom(nickname, settings)
-                  : await api.joinRoom(codeInput, nickname);
-              enter(code);
-            });
+            void act(async () =>
+              enter(await api.joinRoom(codeInput, nickname)),
+            );
           }}
         >
-          {formNickname}
-          {screen === "create" ? (
-            setupFields()
-          ) : (
-            <label className="field-label">
-              {t("roomCode")}
-              <input
-                name="roomCode"
-                autoCapitalize="characters"
-                autoComplete="off"
-                spellCheck={false}
-                className="code-input"
-                value={codeInput}
-                maxLength={6}
-                onChange={(e) =>
-                  setCodeInput(
-                    e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
-                  )
-                }
-                placeholder={t("codePlaceholder")}
-                required
-                minLength={6}
-              />
-            </label>
-          )}
-          <Button
-            disabled={
-              pending ||
-              !nickname.trim() ||
-              (screen === "join" && codeInput.length !== 6)
-            }
-            type="submit"
-          >
-            {pending ? (
-              <LoaderCircle size={18} className="spin" />
-            ) : (
-              <ArrowRight size={18} />
-            )}{" "}
-            {t(screen === "create" ? "createButton" : "joinButton")}
-          </Button>
-          {!configured && (
-            <p className="field-hint center">{t("configLabel")}</p>
-          )}
+          <label className="field-label">
+            {t("nickname")}
+            <input
+              name="nickname"
+              autoComplete="nickname"
+              maxLength={20}
+              required
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder={t("nicknamePlaceholder")}
+            />
+          </label>
+          <label className="field-label">
+            {t("roomCode")}
+            <input
+              name="roomCode"
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              className="code-input"
+              value={codeInput}
+              maxLength={6}
+              onChange={(e) =>
+                setCodeInput(
+                  e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
+                )
+              }
+              placeholder={t("codePlaceholder")}
+              required
+              minLength={6}
+            />
+          </label>
+          <div className="action-dock">
+            <Button
+              disabled={pending || !nickname.trim() || codeInput.length !== 6}
+              type="submit"
+            >
+              {pending ? (
+                <LoaderCircle size={17} className="spin" />
+              ) : (
+                <ArrowRight size={17} />
+              )}{" "}
+              {t("joinButton")}
+            </Button>
+          </div>
         </form>
-      </div>
+      </section>
+    );
+  else
+    content = (
+      <section className="narrow center-state">
+        <Settings2 size={34} />
+        <Title title={t("configTitle")} sub={t("configBody")} />
+        <Button onClick={() => go("home")}>{t("returnHome")}</Button>
+      </section>
     );
   return (
-    <>
-      <div className="app-shell">
-        <header>
+    <div
+      className="app-shell"
+      data-keyboard={keyboardVisible}
+      data-screen={roomCode ? meta?.phase || "loading" : screen}
+    >
+      <header className="app-header">
+        <div className="header-brand">
+          {!roomCode && screen !== "home" && (
+            <button
+              className="icon-button header-back"
+              aria-label={t("backHome")}
+              onClick={() => go("home")}
+            >
+              <ArrowLeft size={19} />
+            </button>
+          )}
           <button
             className="brand"
             onClick={() => {
@@ -936,169 +819,127 @@ export default function App() {
             }}
             aria-label="Sneaky Queries"
           >
-            <div className="brand-icon">
+            <span className="brand-icon">
               <Mask small />
-            </div>
+            </span>
             <span>
               SNEAKY<span>QUERIES</span>
             </span>
-            <b>1.0</b>
           </button>
-          <div className="header-actions">
-            {!roomCode && (
-              <button
-                className="text-button how-link"
-                onClick={() => go("how")}
-              >
-                <HelpCircle size={16} />
-                {t("navHow")}
-              </button>
-            )}
-            <label className="locale-switch">
-              <span className="sr-only">{t("language")}</span>
-              <select
-                value={locale}
-                onChange={(e) => setLocale(e.target.value as Locale)}
-              >
-                <option value="en">EN</option>
-                <option value="nl">NL</option>
-              </select>
-            </label>
-          </div>
-        </header>
-        {emulator && <div className="emulator-banner">{t("emulator")}</div>}
-        {roomCode && (
-          <div className="room-toolbar">
-            <span
-              className={`connection-label ${connected ? "" : "disconnected"}`}
-            >
-              {connected ? <Radio size={13} /> : <WifiOff size={13} />}{" "}
-              {connected ? t("connected") : t("offline")}
-              <span className="toolbar-code">{roomCode}</span>
-            </span>
+        </div>
+        <div className="header-actions">
+          {!roomCode && (
             <button
-              className="text-button"
-              onClick={() =>
-                ask(t("leaveConfirm"), async () => {
-                  if (!host && connected) await api.removePlayer(roomCode, uid);
-                  exit();
-                })
-              }
+              className="icon-button how-link"
+              onClick={() => go("how")}
+              aria-label={t("navHow")}
             >
-              <LogOut size={14} />
-              {t("leave")}
+              <HelpCircle size={19} />
             </button>
-          </div>
-        )}
-        {!roomCode && screen !== "home" && (
-          <button
-            className="text-button back-button"
-            onClick={() => go("home")}
+          )}
+          <label
+            className="locale-switch"
+            title={
+              languageDisabled
+                ? t(
+                    roomCode && !host
+                      ? "hostChoosesLanguage"
+                      : "languageLocked",
+                  )
+                : t("partyLanguage")
+            }
           >
-            <ArrowLeft size={16} />
-            {t("back")}
-          </button>
-        )}
-        {roomCode && !connected && room && (
-          <div className="notice" role="status">
-            <WifiOff size={17} />
-            {t("reconnecting")}
-          </div>
-        )}
-        {hostAway && !host && me && (
-          <div className="notice">
-            <span>{t("hostAway")}</span>
-            <button
-              disabled={!canTakeOver || pending || !connected}
-              className="text-button"
-              onClick={() => void act(() => api.takeOver(roomCode, uid))}
+            <span className="sr-only">{t("language")}</span>
+            <select
+              aria-label={t("language")}
+              value={locale}
+              disabled={languageDisabled}
+              onChange={(e) => changeLanguage(e.target.value as Locale)}
             >
-              {t("takeOver")}
-            </button>
-          </div>
-        )}
-        {error && (
-          <div className="error-banner" role="alert">
-            <span>
-              {t(`error_${error}` as StringKey) || t("error_unknown")}
-            </span>
-            <button
-              className="icon-button"
-              aria-label={t("dismiss")}
-              onClick={() => setError("")}
-            >
-              <X size={18} />
-            </button>
-            {roomCode && (
-              <button className="text-button" onClick={exit}>
-                {t("returnHome")}
-              </button>
-            )}
-          </div>
-        )}
-        <main
-          key={roomCode ? meta?.phase || "loading" : screen}
-          className="screen-enter"
-        >
-          {content}
-        </main>
-        <footer>
-          <span>{t("footer")}</span>
-          <span>
-            {screen === "home" && !roomCode ? t("smallPrint") : t("tagline")}
+              <option value="en">EN</option>
+              <option value="nl">NL</option>
+            </select>
+          </label>
+        </div>
+      </header>
+      {emulator && <div className="emulator-banner">{t("emulator")}</div>}
+      {roomCode && (
+        <div className="room-toolbar">
+          <span
+            className={`connection-label ${connected ? "" : "disconnected"}`}
+          >
+            {connected ? <Radio size={12} /> : <WifiOff size={12} />}{" "}
+            {t(connected ? "connected" : "offline")}
+            <span className="toolbar-code">{roomCode}</span>
           </span>
-          <MessageCircle size={14} />
-        </footer>
-      </div>
-      {confirm && (
-        <div className="modal-backdrop" onClick={() => setConfirm(null)}>
-          <div
-            className="modal panel"
-            role="alertdialog"
-            aria-modal="true"
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                event.preventDefault();
-                setConfirm(null);
-              }
-              if (event.key === "Tab") {
-                const buttons = Array.from(
-                  event.currentTarget.querySelectorAll<HTMLButtonElement>(
-                    "button:not(:disabled)",
-                  ),
-                );
-                const first = buttons[0],
-                  last = buttons[buttons.length - 1];
-                if (event.shiftKey && document.activeElement === first) {
-                  event.preventDefault();
-                  last?.focus();
-                } else if (!event.shiftKey && document.activeElement === last) {
-                  event.preventDefault();
-                  first?.focus();
-                }
-              }
-            }}
-            aria-labelledby="confirm-title"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            className="text-button"
+            onClick={() =>
+              ask(t("leaveConfirm"), async () => {
+                if (!host && connected) await api.removePlayer(roomCode, uid);
+                exit();
+              })
+            }
           >
-            <h2 id="confirm-title">{confirm.text}</h2>
-            <Button
-              autoFocus
-              disabled={pending}
-              onClick={() => {
-                const task = confirm.run;
-                setConfirm(null);
-                void act(task);
-              }}
-            >
-              {t("confirm")}
-            </Button>
-            <Button secondary onClick={() => setConfirm(null)}>
-              {t("cancel")}
-            </Button>
-          </div>
+            <LogOut size={13} />
+            {t("leave")}
+          </button>
         </div>
       )}
-    </>
+      {roomCode && !connected && room && (
+        <div className="notice" role="status">
+          <WifiOff size={15} />
+          {t("reconnecting")}
+        </div>
+      )}
+      {hostAway && !host && me && (
+        <div className="notice">
+          <span>{t("hostAway")}</span>
+          <button
+            disabled={!canTakeOver || pending || !connected}
+            className="text-button"
+            onClick={() => void act(() => api.takeOver(roomCode, uid))}
+          >
+            {t("takeOver")}
+          </button>
+        </div>
+      )}
+      {error && (
+        <div className="error-banner" role="alert">
+          <span>{t(`error_${error}` as StringKey) || t("error_unknown")}</span>
+          <button
+            className="icon-button"
+            aria-label={t("dismiss")}
+            onClick={() => setError("")}
+          >
+            <X size={16} />
+          </button>
+          {roomCode && (
+            <button className="text-button" onClick={exit}>
+              {t("returnHome")}
+            </button>
+          )}
+        </div>
+      )}
+      <main
+        key={roomCode ? meta?.phase || "loading" : screen}
+        className="screen-enter"
+      >
+        {content}
+      </main>
+      {confirm && (
+        <ConfirmDialog
+          text={confirm.text}
+          locale={locale}
+          disabled={pending}
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => {
+            const task = confirm.run;
+            setConfirm(null);
+            void act(task);
+          }}
+        />
+      )}
+    </div>
   );
 }

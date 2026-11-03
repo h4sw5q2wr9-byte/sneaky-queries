@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { translate } from "../lib/i18n";
+import type { Locale } from "../lib/types";
 import type { ButtonHTMLAttributes } from "react";
 export function Mask({ small = false }: { small?: boolean }) {
   return (
@@ -52,6 +55,68 @@ export function Title({
       {eyebrow && <div className="eyebrow">{eyebrow}</div>}
       <h1>{title}</h1>
       {sub && <p>{sub}</p>}
+    </div>
+  );
+}
+
+export function ConfirmDialog({
+  text,
+  locale,
+  onConfirm,
+  onCancel,
+  disabled = false,
+}: {
+  text: string;
+  locale: Locale;
+  onConfirm: () => void;
+  onCancel: () => void;
+  disabled?: boolean;
+}) {
+  useEffect(() => {
+    const previous = document.activeElement;
+    return () => {
+      if (previous instanceof HTMLElement && previous.isConnected)
+        previous.focus();
+    };
+  }, []);
+  return (
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div
+        className="modal panel"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") onCancel();
+          if (e.key === "Tab") {
+            const buttons = Array.from(
+              e.currentTarget.querySelectorAll<HTMLButtonElement>(
+                "button:not(:disabled)",
+              ),
+            );
+            const first = buttons[0],
+              last = buttons[buttons.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last?.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first?.focus();
+            }
+          }
+        }}
+      >
+        <h2 id="confirm-title">{text}</h2>
+        <div className="action-dock">
+          <Button disabled={disabled} onClick={onConfirm}>
+            {translate(locale, "confirm")}
+          </Button>
+          <Button secondary autoFocus onClick={onCancel}>
+            {translate(locale, "cancel")}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

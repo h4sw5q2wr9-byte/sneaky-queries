@@ -1,6 +1,6 @@
 # Sneaky Queries working instructions
 
-Preserve the supplied 1.0 gameplay, Firebase synchronization, private assignment boundaries, and English/Dutch content. Preserve both online rooms and Pass & Play. Shared-phone private turns require an explicit reveal; completed cards stay disabled, discussion waits for all answers, and refresh/backgrounding returns private turns to neutral name cards. Run checks appropriate to your changes. Do not claim production multiplayer verification when Firebase has not been configured or real live tests have not passed.
+Preserve the supplied 1.0 gameplay, Firebase synchronization, private assignment boundaries, and English/Dutch content. Preserve both online rooms and Pass & Play. Shared-phone private turns require an explicit reveal; completed cards stay disabled, discussion waits for all answers, and refresh/backgrounding returns private turns to neutral name cards. Keep the compact mobile app layout, paginated large groups/results, visible primary actions and reduced-motion support. Use the single header language choice for UI and questions; do not restore a second setup language selector. Run checks appropriate to your changes. Do not claim production multiplayer verification when Firebase has not been configured or real live tests have not passed.
 
 ## Completion notification preference
 

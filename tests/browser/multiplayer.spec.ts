@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { createOnline, expectScreenFit } from "./helpers";
 import type { BrowserContext, Page } from "@playwright/test";
 test("three independent phones complete synchronized rounds, refresh, reconnect, replay, and reset", async ({
   browser,
@@ -7,7 +8,11 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
   const pages: Page[] = [];
   for (let i = 0; i < 3; i++) {
     const context = await browser.newContext({
-      viewport: { width: 390, height: 844 },
+      viewport: [
+        { width: 320, height: 568 },
+        { width: 375, height: 667 },
+        { width: 390, height: 844 },
+      ][i],
       isMobile: true,
       hasTouch: true,
     });
@@ -26,14 +31,8 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
       path: "test-results/home-mobile.png",
       fullPage: true,
     });
-    await host
-      .getByRole("button", { name: "Create a party", exact: true })
-      .click();
-    await host.getByRole("textbox", { name: "Your nickname" }).fill("Host");
-    await host.getByRole("combobox", { name: "Room size" }).selectOption("3");
-    await host.getByRole("button", { name: "Let’s get sneaky" }).click();
-    await expect(host.locator(".room-code")).toBeVisible();
-    const code = (await host.locator(".room-code").textContent())!;
+    const code = await createOnline(host, "Host");
+    await expectScreenFit(host);
     for (const [page, name] of [
       [alice, "Alice"],
       [bob, "Bob"],
@@ -65,8 +64,9 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
     await host.getByRole("button", { name: "Start the round" }).click();
     for (const page of pages)
       await expect(
-        page.getByRole("heading", { name: "Keep a straight face." }),
+        page.getByRole("heading", { name: "Your turn." }),
       ).toBeVisible();
+    for (const page of pages) await expectScreenFit(page);
     const question = await alice.locator(".question").textContent();
     await alice.reload();
     await expect(alice.locator(".question")).toHaveText(question!);
@@ -82,9 +82,10 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
     }
     for (const page of pages) {
       await expect(
-        page.getByRole("heading", { name: "Something doesn’t add up." }),
+        page.getByRole("heading", { name: "Who’s bluffing?" }),
       ).toBeVisible();
       await expect(page.locator(".answer-card")).toHaveCount(3);
+      await expectScreenFit(page);
     }
     await expect(
       alice.getByRole("button", { name: "Reveal the impostors" }),
@@ -96,9 +97,10 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
     await host.getByRole("button", { name: "Reveal the impostors" }).click();
     for (const page of pages) {
       await expect(
-        page.getByRole("heading", { name: "Caught in the question." }),
+        page.getByRole("heading", { name: "Caught you." }),
       ).toBeVisible();
       await expect(page.locator(".impostor-card")).toHaveCount(1);
+      await expectScreenFit(page);
     }
     await host.screenshot({
       path: "test-results/reveal-mobile.png",
@@ -107,7 +109,7 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
     await host.getByRole("button", { name: "Play again", exact: true }).click();
     for (const page of pages)
       await expect(
-        page.getByRole("heading", { name: "Keep a straight face." }),
+        page.getByRole("heading", { name: "Your turn." }),
       ).toBeVisible();
     await contexts[1].setOffline(true);
     await alice.waitForTimeout(700);
@@ -131,10 +133,16 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
       .getByRole("button", { name: "Change setup", exact: true })
       .click();
     await host
-      .getByRole("combobox", { name: "Question language" })
+      .getByRole("combobox", { name: "Language", exact: true })
       .selectOption("nl");
-    await host.getByRole("button", { name: "Save setup" }).click();
-    await host.getByRole("button", { name: "Start the round" }).click();
+    await expect(alice.locator("html")).toHaveAttribute("lang", "nl");
+    await host.getByRole("button", { name: "Verder", exact: true }).click();
+    await host
+      .getByRole("button", { name: "Instellingen opslaan", exact: true })
+      .click();
+    await host
+      .getByRole("button", { name: "Start de ronde", exact: true })
+      .click();
     await expect(host.locator(".question")).toContainText("?");
     for (const page of pages) {
       expect(
@@ -167,16 +175,7 @@ test("host loss, takeover, removal, and refilling a vacated seat do not strand a
   );
   try {
     await host.goto("./");
-    await host
-      .getByRole("button", { name: "Create a party", exact: true })
-      .click();
-    await host
-      .getByRole("textbox", { name: "Your nickname" })
-      .fill("Original host");
-    await host.getByRole("combobox", { name: "Room size" }).selectOption("3");
-    await host.getByRole("button", { name: "Let’s get sneaky" }).click();
-    await expect(host.locator(".room-code")).toBeVisible();
-    const code = (await host.locator(".room-code").textContent())!;
+    const code = await createOnline(host, "Original host");
     for (const [page, name] of [
       [alice, "Alice"],
       [bob, "Bob"],
@@ -217,12 +216,12 @@ test("host loss, takeover, removal, and refilling a vacated seat do not strand a
       .click();
     await alice.getByRole("button", { name: "Confirm", exact: true }).click();
     await expect(
-      alice.getByRole("heading", { name: "Something doesn’t add up." }),
+      alice.getByRole("heading", { name: "Who’s bluffing?" }),
     ).toBeVisible();
     await expect(bob.locator(".answer-card")).toHaveCount(2);
     await alice.getByRole("button", { name: "Reveal the impostors" }).click();
     await expect(
-      bob.getByRole("heading", { name: "Caught in the question." }),
+      bob.getByRole("heading", { name: "Caught you." }),
     ).toBeVisible();
     await alice
       .getByRole("button", { name: "Change setup", exact: true })

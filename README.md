@@ -9,7 +9,7 @@ Play at **https://h4sw5q2wr9-byte.github.io/sneaky-queries/**. The configured pr
 ## Choose how to play
 
 - **Online party:** create or join a Firebase room, with each player using their own phone. Live room codes, readiness, private questions, synchronized results and host controls remain available.
-- **Pass & Play:** tap the shared-phone option on the home screen (or open `?mode=local`). Choose 3–10 players, enter a different name for each, and pick impostors, categories and question language. Tap your own name card, explicitly reveal your question, submit once, then pass the phone. Completed cards become grey and disabled. Discussion stays locked until everyone answers. Reveal together, replay, or change the setup.
+- **Pass & Play:** tap the shared-phone option on the home screen (or open `?mode=local`). Choose 3–10 players, enter a different name for each, and pick impostors and categories. The single language control in the header sets both the interface and questions. Tap your own name card, explicitly reveal your question, submit once, then pass the phone. Completed cards become grey and disabled. Discussion stays locked until everyone answers. Reveal together, replay, or change the setup.
 
 Both modes use the same original mechanics, 100 bilingual question sets, distinct impostor variations and no-repeat question history. You can try the whole Pass & Play flow alone by entering three names and taking each turn yourself.
 
@@ -74,7 +74,7 @@ Database rules deploy separately from Pages. Run the security tests before chang
 
 ## Playing
 
-The host chooses room capacity, impostor count (1, 2, 3, or random), enabled categories, and question language. All categories start enabled; at least one stays selected. Impostors must be a minority: 3–4 players allow 1, 5–6 allow up to 2, and 7–10 allow up to 3. Everyone, including the host, joins with a nickname and presses Ready.
+The host chooses room capacity, impostor count (1, 2, 3, or random), and enabled categories in a two-step setup. One header control sets the party language for both the interface and questions. The host can change it in the lobby; all room members follow that choice. Pass & Play uses the same control before dealing or after returning to setup. Language stays fixed during a round. All categories start enabled; at least one stays selected. Impostors must be a minority: 3–4 players allow 1, 5–6 allow up to 2, and 7–10 allow up to 3. Everyone, including the host, joins with a nickname and presses Ready.
 
 Every device receives a private question with exactly the same interface. Nobody is told whether they are an impostor. Normal players receive the original; impostors receive distinct, randomly selected I1/I2/I3 variations. Answers lock on submission. When all remaining players finish, the host client automatically publishes the original question and named answers. Discuss out loud; the host presses Reveal. Then see the impostors and their questions, play again with the same setup, or return to the lobby to change it.
 
@@ -99,7 +99,10 @@ src/styles.css              Purple/pink responsive design, reveal and reduced mo
 src/lib/game.ts             Shared assignment, randomness and question history logic
 src/lib/local.ts            Pass & Play lifecycle and safe session restoration
 src/components/LocalParty.tsx Shared-phone setup, name cards and private turns
-src/components/SettingsFields.tsx Shared online/local setup controls
+src/components/SetupWizard.tsx Shared two-step setup and paged name entry
+src/components/RoundViews.tsx Paged discussion answers and impostor reveal
+src/components/PlayerRoster.tsx Paged online lobby and host management
+src/components/Pager.tsx     Compact, labelled navigation controls
 src/lib/rooms.ts             Firebase operations, admission, progress, presence and recovery
 src/lib/firebase.ts          Anonymous session identity and Firebase SDK initialization
 src/lib/config.ts            Public defaults, environment overrides and demo isolation
@@ -116,7 +119,7 @@ tests/                     Game, rules and independent-browser tests
 
 Add a four-part row (`original~I1~I2~I3`) to the appropriate category in **both** locale collections in `src/data/questions.ts`. IDs derive from category and row position, so append rows rather than reordering existing ones. The exported objects follow `{id, category, original, I1, I2, I3}`. I1 is opposite, I2 is shifted/balanced, I3 is different; aim for answers that remain plausibly suspicious. No gameplay changes are needed when adding hundreds of rows. Update the content-count tests when expanding the catalogue.
 
-For a new language, extend `Locale`, add a complete typed UI dictionary and a matching full question catalogue, update the database locale validator and the two language selectors, and add content tests before offering it. `localeDirection()` already returns `rtl` for Arabic; enable it only when Arabic content is complete and test RTL spacing/layout. Currently **only English and Dutch are selectable**.
+For a new language, extend `Locale`, add a complete typed UI dictionary and a matching full question catalogue, update the database locale validator and the single header language selector, and add content tests before offering it. `localeDirection()` already returns `rtl` for Arabic; enable it only when Arabic content is complete and test RTL spacing/layout. Currently **only English and Dutch are selectable**.
 
 ## Validation
 
@@ -133,7 +136,11 @@ For browser tests install Chromium with `npx playwright install --with-deps chro
 
 ## Accessibility and scope
 
-Dark mode only; large touch targets, labelled fields, keyboard focus rings, live errors, semantic progress, safe text rendering, and reduced-motion support. The app uses Google Fonts with local system fallbacks. The provided web configuration includes a measurement ID, but the app does not initialize Google Analytics or collect analytics events. No external illustration services. V1 intentionally has no mandatory voting, scores, or leaderboard.
+Dark mode only, with an ink-purple card-game design, pink actions, card flips, dealt player cards, answer-lock stamps and brief reveal confetti. OS reduced-motion preferences disable movement.
+
+The app uses the available mobile viewport, including software-keyboard resizing. Setup is split into two steps; names, player cards, online rosters and discussion answers use four items per page; impostors reveal one per page. Primary actions stay at the bottom of their screen. Long text, unusually short viewports and keyboard entry can scroll inside a bounded region, rather than creating a long webpage.
+
+Large touch targets, labelled fields, keyboard focus rings, live errors, semantic progress, safe text rendering, and reduced-motion support. The app uses Google Fonts with local system fallbacks. The provided web configuration includes a measurement ID, but the app does not initialize Google Analytics or collect analytics events. No external illustration services. V1 intentionally has no mandatory voting, scores, or leaderboard.
 
 ## Telegram completion updates
 
@@ -147,6 +154,6 @@ Inspect the sender's Actions run before claiming delivery. Its success means Tel
 
 ## Opt-in live multiplayer check
 
-`npm run test:live` runs the online three-identity round test plus the three Pass & Play/browser-routing checks against the deployed site, without emulators. It creates real anonymous Firebase accounts and a real room that expires after 12 hours. Override `SQ_LIVE_URL` for another deployment, retaining its trailing slash. TLS verification stays enabled. The test uses the configured HTTPS proxy when present; managed test environments must trust their provided proxy CA in the browser.
+`npm run test:live` runs the online three-identity round test plus six Pass & Play, routing and compact-layout checks against the deployed site, without emulators. It creates real anonymous Firebase accounts and a real room that expires after 12 hours. Override `SQ_LIVE_URL` for another deployment, retaining its trailing slash. TLS verification stays enabled. The test uses the configured HTTPS proxy when present; managed test environments must trust their provided proxy CA in the browser.
 
 `npm run test:live:rules` is an additional opt-in check against the configured production Firebase project. It creates three temporary anonymous identities and its own expiring room, verifies 28 setup/permission/phase checks, then deletes only those test identities. It does not read or mutate other parties. Its room records follow the same 12-hour access expiry and retention policy as normal game rooms. Python 3 is required for this optional standard-library script. Never run live tests against a project you are not authorized to test.

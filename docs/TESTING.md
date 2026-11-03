@@ -38,7 +38,7 @@ Use Java 21+ for the Database emulator. Do not run both emulator test scripts si
 Use at least three **different phones or isolated browser profiles**. Do not use three tabs sharing an anonymous identity. At minimum use an iPhone with Safari and an Android with Chrome. Open the deployed HTTPS Pages URL after adding its host to Firebase Authentication authorized domains.
 
 1. **Create and invitation:** Host creates with a nickname and capacity 3; verify all ten categories start enabled. Copy/share invite to two phones. Join using link and manually typed lowercase code. Confirm named players appear everywhere. A fourth distinct client gets a full-room message; a wrong code gets an invalid-code message.
-2. **Setup guards:** Try 3 players with 2 impostors: start must remain unavailable. Use 1 or Random. Try deselecting every category: one stays selected. Change question language to Dutch; only English/Dutch should be offered.
+2. **Setup guards:** Try 3 players with 2 impostors: start must remain unavailable. Use 1 or Random. Try deselecting every category: one stays selected. Use the single header language control to select Dutch; guests must follow the host, both UI and questions must change, and only English/Dutch should be offered. The control locks during a round.
 3. **Ready and privileges:** Start waits for 3 ready, connected players. Non-hosts have no settings/start/reveal controls. Verify names with punctuation and emoji render as plain text. Duplicate nicknames must not merge identities.
 4. **Private delivery:** Start. Inspect each phone privately: same layout, no role/variant indication. Compare only after the round; two questions should match and one should differ. Enter answers with emoji and punctuation. Check 160-character input limit and lock-on-submit. No player can see others' answers yet. Submitted counts synchronize.
 5. **Refresh:** Refresh an unanswered phone: it must receive the same question. Submit, then refresh again: it must remain waiting and must not submit a second answer.
@@ -93,3 +93,20 @@ The [deployment for `f42b3a8`](https://github.com/h4sw5q2wr9-byte/sneaky-queries
 The first production-only network assertion caught eager Firebase initialization on the mobile profile; Auth/Database creation was deferred to online operations and guarded with two lifecycle unit tests. The production test then passed. No physical iPhone Safari or Android Chrome was operated by the assistant, and shared-phone data remains protected by the turn-taking UI and the shared browser's normal storage trust model.
 
 Open shared-phone play directly at https://h4sw5q2wr9-byte.github.io/sneaky-queries/?mode=local . For a solo functional try-out, enter three names and take each private turn yourself.
+
+## Compact mobile redesign acceptance — 2026-11-03
+
+The redesign adds a single party-language control, two-step setup, paged large groups/results, short card/reveal animations and a layout that responds to the visual viewport. Normal-height screens aim to fit without page scrolling. Long answers, large accessibility text and software keyboards may need bounded internal scrolling; question and answer text remains readable inside bounded regions.
+
+Additional actual-phone checks:
+
+1. At 3 and 10 players, complete both setup steps. Check all names/categories remain reachable and the next/start button stays visible. Navigate all player-card pages.
+2. Open and dismiss the iPhone/Android software keyboard on the last name and on a private answer. The current field and primary action must remain reachable. Check Safari with browser bars expanded/collapsed and on devices with home indicators.
+3. Complete a ten-player round with maximum-length names/answers. Page through every named answer and all three impostors. Long text must be readable inside its region, with Reveal/Replay still reachable.
+4. Use Dutch, then start a round. There must be one language selector. Online guests follow the host; a dealt round cannot switch language. Return to setup to change it.
+5. Watch the card deal, private reveal, locked answer, handoff, discussion and final reveal. Animations must be brief and must not delay actions. Turn on Reduce Motion and repeat.
+6. Open host controls, remove a disconnected player and reset a round on a short screen. Check dialog focus and controls with VoiceOver and an external keyboard.
+
+Automated viewport checks include 320 × 568, 375 × 667 (Dutch), and 390 × 844 with ten players, full document/horizontal scroll assertions, no clipped primary actions, reduced motion and a simulated 340 px keyboard viewport. These are Chromium emulation checks, not actual iOS keyboard or physical-device verification.
+
+Local redesign checks: ESLint, production build and all 20 unit tests passed. All eight combined emulator/browser tests passed, including host recovery, the shared-phone lifecycle, the single language choice and three compact ten-player layouts. The three-identity online test checks primary-action visibility and page overflow at 320 × 568, 375 × 667 and 390 × 844 through private questions, discussion and reveal. Finite card animations settle before layout measurements. Published verification follows the release deployment.

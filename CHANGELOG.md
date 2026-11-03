@@ -28,3 +28,12 @@
 - Deferred Firebase Auth/Database initialization until online play so the shared-phone flow avoids background Firebase requests, including on mobile browser profiles.
 
 - Verified all four live-site online/shared-phone checks after deployment, including no Firebase backend requests during Pass & Play.
+
+## Compact mobile redesign — 2026-11-03
+
+- Rebuilt the visual design around ink-purple playing cards, pink actions, a small app header and two clear play modes.
+- Split setup into names/room and rules steps. Paginated ten-player names, cards, rosters and discussion answers; reveal one impostor at a time. Kept primary actions within the screen.
+- Replaced separate interface/question language choices with one party language. Online guests follow their host; rounds keep their dealt language.
+- Added card flips, dealt player cards, answer-lock stamps, animated handoff, staggered answers, short reveal confetti and reduced-motion support.
+- Adapted the layout to the visual viewport when the software keyboard opens, with bounded scrolling for long text. Improved dialog focus handling.
+- Added small-screen layout, ten-player paging, single-language and keyboard-viewport regression checks. Gameplay, Firebase privacy boundaries and both modes remain intact.

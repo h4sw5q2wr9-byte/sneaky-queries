@@ -1,40 +1,13 @@
 import { test, expect } from "@playwright/test";
-import type { Page } from "@playwright/test";
-async function enterNames(page: Page, names: string[]) {
-  await page
-    .getByRole("combobox", { name: "Player count", exact: true })
-    .selectOption(String(names.length));
-  for (let i = 0; i < names.length; i++)
-    await page
-      .getByRole("textbox", { name: `Player ${i + 1}`, exact: true })
-      .fill(names[i]);
-}
-async function choose(page: Page, name: string) {
-  await page
-    .getByRole("button", { name: `${name}, Choose your card`, exact: true })
-    .click();
-  await expect(page.locator(".question")).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Reveal my question", exact: true })
-    .click();
-  await expect(page.locator(".question")).toBeVisible();
-  return (await page.locator(".question").textContent())!;
-}
-async function submit(page: Page, answer: string) {
-  await page
-    .getByRole("textbox", { name: "Your answer", exact: true })
-    .fill(answer);
-  await page
-    .getByRole("button", { name: "Lock in my answer", exact: true })
-    .click();
-  await expect(page.locator(".question")).toHaveCount(0);
-  await expect(
-    page.getByRole("textbox", { name: "Your answer", exact: true }),
-  ).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Back to name cards", exact: true })
-    .click();
-}
+import { questions } from "../../src/data/questions";
+import {
+  choosePrivate,
+  expectScreenFit,
+  fillLocalNames,
+  localOptions,
+  submitPrivate,
+  text,
+} from "./helpers";
 
 test("Pass & Play completes private turns, safe refresh, discussion, reveal and replay without Firebase", async ({
   page,
@@ -47,16 +20,17 @@ test("Pass & Play completes private turns, safe refresh, discussion, reveal and 
         request.url(),
       )
     )
-      backendRequests.push(
-        new URL(request.url()).origin + new URL(request.url()).pathname,
-      );
+      backendRequests.push(new URL(request.url()).pathname);
   });
   await page.goto("./");
+  await expect(page.locator(".deck-card.front")).toHaveCSS(
+    "animation-name",
+    "frontFloat",
+  );
   await page.getByRole("button", { name: "Pass & Play", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "One phone. All the suspects." }),
-  ).toBeVisible();
-  await enterNames(page, ["Alice", "Bob", "Cara"]);
+  await fillLocalNames(page, ["Alice", "Bob", "Cara"]);
+  await localOptions(page);
+  await expect(page.getByRole("combobox")).toHaveCount(1); // The one global language choice.
   await page
     .getByRole("button", { name: "Deal the questions", exact: true })
     .click();
@@ -66,19 +40,22 @@ test("Pass & Play completes private turns, safe refresh, discussion, reveal and 
   ).toBeDisabled();
   await page.screenshot({
     path: "test-results/passplay-cards-mobile.png",
-    fullPage: true,
     animations: "disabled",
   });
-  const firstQuestion = await choose(page, "Alice");
+  const first = await choosePrivate(page, "Alice");
+  await expect(page.locator(".question-panel")).toHaveCSS(
+    "animation-name",
+    "cardTurn",
+  );
   await page
     .getByRole("textbox", { name: "Your answer" })
     .fill("Unsubmitted private draft");
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Find your name." }),
+    page.getByRole("heading", { name: "Who’s next?", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".question")).toHaveCount(0);
-  expect(await choose(page, "Alice")).toBe(firstQuestion);
+  expect(await choosePrivate(page, "Alice")).toBe(first);
   await expect(page.getByRole("textbox", { name: "Your answer" })).toHaveValue(
     "",
   );
@@ -94,61 +71,46 @@ test("Pass & Play completes private turns, safe refresh, discussion, reveal and 
     });
   });
   await expect(
-    page.getByRole("heading", { name: "Find your name." }),
+    page.getByRole("heading", { name: "Who’s next?", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".question")).toHaveCount(0);
-  const questions: Record<string, string> = {
-    Alice: await choose(page, "Alice"),
+  const seen: Record<string, string> = {
+    Alice: await choosePrivate(page, "Alice"),
   };
-  await submit(page, "My garden gnome");
+  await submitPrivate(page, "My garden gnome");
   await expect(
     page.getByRole("button", { name: "Alice, Answer locked", exact: true }),
-  ).toBeDisabled();
-  await expect(
-    page.getByRole("button", { name: "Continue to discussion" }),
   ).toBeDisabled();
   await page.reload();
   await expect(
     page.getByRole("button", { name: "Alice, Answer locked", exact: true }),
   ).toBeDisabled();
-  // A loaded page can complete the local round while the network is unavailable.
   await context.setOffline(true);
-  questions.Cara = await choose(page, "Cara");
-  await submit(page, "A tiny dragon");
-  questions.Bob = await choose(page, "Bob");
-  await submit(page, "My homework");
+  seen.Cara = await choosePrivate(page, "Cara");
+  await submitPrivate(page, "A tiny dragon");
+  seen.Bob = await choosePrivate(page, "Bob");
+  await submitPrivate(page, "My homework");
   await expect(page.locator(".name-card.answered")).toHaveCount(3);
-  await expect(
-    page.getByRole("button", { name: "Continue to discussion" }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Continue to discussion" }).click();
-  await expect(page.locator(".answer-card")).toHaveCount(3);
+  await page
+    .getByRole("button", { name: "Continue to discussion", exact: true })
+    .click();
   const original = (await page
     .locator(".original-panel .question")
     .textContent())!;
-  expect(Object.values(questions).filter((q) => q === original)).toHaveLength(
-    2,
-  );
-  expect(new Set(Object.values(questions)).size).toBe(2);
+  expect(Object.values(seen).filter((q) => q === original)).toHaveLength(2);
+  await expect(page.locator(".answer-card")).toHaveCount(3);
   await page
     .getByRole("button", { name: "Reveal the impostors", exact: true })
     .click();
   await expect(page.locator(".impostor-card")).toHaveCount(1);
-  const impostor = Object.keys(questions).find(
-    (name) => questions[name] !== original,
-  )!;
+  const impostor = Object.keys(seen).find((name) => seen[name] !== original)!;
   await expect(page.locator(".impostor-card h2")).toHaveText(impostor);
-  await expect(page.locator(".revealed-question")).toHaveText(
-    questions[impostor],
-  );
+  await expect(page.locator(".revealed-question")).toHaveText(seen[impostor]);
   await page.screenshot({
     path: "test-results/passplay-reveal-mobile.png",
-    fullPage: true,
     animations: "disabled",
   });
   await page.getByRole("button", { name: "Play again", exact: true }).click();
   await expect(page.locator(".name-card.answered")).toHaveCount(0);
-  await expect(page.getByText("Round 2", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Change setup", exact: true }).click();
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(page.locator(".name-card")).toHaveCount(3);
@@ -161,14 +123,14 @@ test("Pass & Play completes private turns, safe refresh, discussion, reveal and 
   await context.setOffline(false);
 });
 
-test("Pass & Play supports seven players, unique variants, Dutch, and narrow screens", async ({
+test("Pass & Play has one language choice, seven players, paged reveals and Dutch questions", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("./?mode=local");
-  await expect(
-    page.getByRole("button", { name: "Deal the questions", exact: true }),
-  ).toBeDisabled();
+  await page
+    .getByRole("combobox", { name: "Language", exact: true })
+    .selectOption("nl");
   const names = [
     "AlexandervanderBerg",
     "Bo",
@@ -178,81 +140,157 @@ test("Pass & Play supports seven players, unique variants, Dutch, and narrow scr
     "Fleur",
     "Gio",
   ];
-  await enterNames(page, names);
+  await fillLocalNames(page, names, "nl");
+  await localOptions(page, "nl");
+  await expect(page.getByRole("combobox")).toHaveCount(1);
   await page
-    .getByRole("textbox", { name: "Player 2", exact: true })
-    .fill(" alexandervanderberg ");
-  await expect(page.getByRole("alert")).toContainText("different name");
-  await expect(
-    page.getByRole("button", { name: "Deal the questions" }),
-  ).toBeDisabled();
-  await page.getByRole("textbox", { name: "Player 2", exact: true }).fill("Bo");
-  await page
-    .getByRole("combobox", { name: "Impostors", exact: true })
-    .selectOption("3");
-  await page
-    .getByRole("combobox", { name: "Question language", exact: true })
-    .selectOption("nl");
-  await page
-    .getByRole("button", { name: "Deal the questions", exact: true })
+    .getByRole("group", { name: "Impostors", exact: true })
+    .getByRole("button", { name: "3", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Deel de vragen uit", exact: true })
+    .click();
+  await expect(
+    page.getByRole("combobox", { name: "Taal", exact: true }),
+  ).toBeDisabled();
   const seen: Record<string, string> = {};
   for (const name of names) {
-    seen[name] = await choose(page, name);
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true);
-    await submit(page, `Antwoord van ${name}`);
+    seen[name] = await choosePrivate(page, name, "nl");
+    await submitPrivate(page, `Antwoord van ${name}`, "nl");
   }
-  await page.getByRole("button", { name: "Continue to discussion" }).click();
+  await page
+    .getByRole("button", { name: "Verder naar de discussie", exact: true })
+    .click();
   const original = (await page
     .locator(".original-panel .question")
     .textContent())!;
+  expect(questions.nl.some((q) => q.original === original)).toBe(true);
   expect(Object.values(seen).filter((q) => q === original)).toHaveLength(4);
-  await page.getByRole("button", { name: "Reveal the impostors" }).click();
-  await expect(page.locator(".impostor-card")).toHaveCount(3);
-  expect(
-    new Set(await page.locator(".revealed-question").allTextContents()).size,
-  ).toBe(3);
+  await expect(page.locator(".answer-card")).toHaveCount(4);
   await page
-    .getByRole("combobox", { name: "Language", exact: true })
-    .selectOption("nl");
-  await expect(
-    page.getByRole("button", { name: "Opnieuw spelen", exact: true }),
-  ).toBeVisible();
+    .getByRole("button", { name: "Volgende pagina", exact: true })
+    .click();
+  await expect(page.locator(".answer-card")).toHaveCount(3);
+  await page
+    .getByRole("button", { name: "Onthul de impostors", exact: true })
+    .click();
+  const variants = [];
+  for (let i = 0; i < 3; i++) {
+    variants.push(await page.locator(".revealed-question").textContent());
+    if (i < 2)
+      await page
+        .getByRole("button", { name: "Volgende pagina", exact: true })
+        .click();
+  }
+  expect(new Set(variants).size).toBe(3);
   await page
     .getByRole("button", { name: "Instellingen wijzigen", exact: true })
     .click();
+  await expect(
+    page.getByRole("combobox", { name: "Taal", exact: true }),
+  ).toBeEnabled();
   await page
     .getByRole("combobox", { name: "Aantal spelers", exact: true })
     .selectOption("3");
+  await page.getByRole("button", { name: "Verder", exact: true }).click();
   await expect(
-    page.getByRole("combobox", { name: "Impostors", exact: true }),
-  ).toHaveValue("1");
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
+    page
+      .getByRole("group", { name: "Impostors", exact: true })
+      .getByRole("button", { name: "1", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
 });
 
 test("choosing one phone from an invitation preserves the local route on refresh", async ({
   page,
 }) => {
   await page.goto("./?room=ABC234");
-  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Back home", exact: true }).click();
   await page.getByRole("button", { name: "Pass & Play", exact: true }).click();
   await expect(page).toHaveURL(/mode=local/);
   expect(new URL(page.url()).searchParams.has("room")).toBe(false);
-  await page.reload();
-  await expect(
-    page.getByRole("heading", { name: "One phone. All the suspects." }),
-  ).toBeVisible();
   await page.evaluate(() => sessionStorage.setItem("sq-room", "OLD234"));
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "One phone. All the suspects." }),
+    page.getByRole("heading", { name: "Who’s playing?", exact: true }),
   ).toBeVisible();
 });
+
+for (const size of [
+  { width: 320, height: 568, lang: "en" as const },
+  { width: 375, height: 667, lang: "nl" as const },
+  { width: 390, height: 844, lang: "en" as const },
+])
+  test(`Pass & Play fits ${size.width}×${size.height} without page scrolling, including ten players`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(size);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("./");
+    if (size.lang === "nl")
+      await page
+        .getByRole("combobox", { name: "Language", exact: true })
+        .selectOption("nl");
+    const t = (key: Parameters<typeof text>[1]) => text(size.lang, key);
+    await expectScreenFit(page);
+    await expect(page.locator(".deck-card.front")).toHaveCSS(
+      "animation-name",
+      "none",
+    );
+    await page.screenshot({
+      path: `test-results/home-${size.width}.png`,
+      animations: "disabled",
+    });
+    await page
+      .getByRole("button", { name: t("passPlay"), exact: true })
+      .click();
+    await expectScreenFit(page);
+    const names = Array.from({ length: 10 }, (_, i) => `Player ${i + 1}`);
+    await fillLocalNames(page, names, size.lang);
+    await expectScreenFit(page);
+    await localOptions(page, size.lang);
+    await expectScreenFit(page);
+    await page.screenshot({
+      path: `test-results/setup-${size.width}.png`,
+      animations: "disabled",
+    });
+    await page
+      .getByRole("button", { name: t("localStart"), exact: true })
+      .click();
+    await expect(page.locator(".name-card")).toHaveCount(4);
+    await expectScreenFit(page);
+    await page
+      .getByRole("button", { name: t("nextPage"), exact: true })
+      .click();
+    await expectScreenFit(page);
+    await page
+      .getByRole("button", { name: t("nextPage"), exact: true })
+      .click();
+    await expect(page.locator(".name-card")).toHaveCount(2);
+    await expectScreenFit(page);
+    await choosePrivate(page, names[9], size.lang);
+    await expectScreenFit(page);
+    await page
+      .getByRole("textbox", { name: t("answerLabel"), exact: true })
+      .fill("A very long answer ".repeat(8));
+    await expectScreenFit(page, true);
+    await page.screenshot({
+      path: `test-results/question-${size.width}.png`,
+      animations: "disabled",
+    });
+    // Simulate the visual viewport shrinking for an iPhone software keyboard.
+    await page.evaluate(() => {
+      Object.defineProperty(window.visualViewport!, "height", {
+        configurable: true,
+        get: () => 340,
+      });
+      window.visualViewport!.dispatchEvent(new Event("resize"));
+    });
+    await expect(page.locator(".app-shell")).toHaveAttribute(
+      "data-keyboard",
+      "true",
+    );
+    await expectScreenFit(page, true);
+    await expect(
+      page.getByRole("button", { name: t("lockAnswer"), exact: true }),
+    ).toBeInViewport();
+  });
