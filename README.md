@@ -4,6 +4,8 @@
 
 This revival follows the supplied October 2025 mechanics and purple/pink design direction. Its 100 question sets are **newly written starter content**, not recovered originals. Each has an original and three variations, fully available in English and Dutch. The eight other planned languages are intentionally not offered until their UI and question translations are complete.
 
+Play at **https://h4sw5q2wr9-byte.github.io/sneaky-queries/**. The configured production app passed a full round with three independent browser identities and live database access checks. Physical-phone acceptance testing is still listed separately.
+
 ## Run locally
 
 Use Node 22+ and npm. Java 21+ is needed only for emulator tests.
@@ -133,3 +135,5 @@ Inspect the sender's Actions run before claiming delivery. Its success means Tel
 ## Opt-in live multiplayer check
 
 `npm run test:live` runs the three-identity round test against the deployed site, without emulators. It creates real anonymous Firebase accounts and a real room that expires after 12 hours. Override `SQ_LIVE_URL` for another deployment, retaining its trailing slash. TLS verification stays enabled. The test uses the configured HTTPS proxy when present; managed test environments must trust their provided proxy CA in the browser.
+
+`npm run test:live:rules` is an additional opt-in check against the configured production Firebase project. It creates three temporary anonymous identities and its own expiring room, verifies 28 setup/permission/phase checks, then deletes only those test identities. It does not read or mutate other parties. Its room records follow the same 12-hour access expiry and retention policy as normal game rooms. Python 3 is required for this optional standard-library script. Never run live tests against a project you are not authorized to test.

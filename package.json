@@ -14,7 +14,8 @@
     "emulators": "firebase emulators:start --project demo-sneaky-queries --only auth,database",
     "test:live": "playwright test --config playwright.live.config.ts",
     "predev": "node scripts/prepare-firebase-setup.mjs",
-    "prebuild": "node scripts/prepare-firebase-setup.mjs"
+    "prebuild": "node scripts/prepare-firebase-setup.mjs",
+    "test:live:rules": "python3 scripts/check-live-firebase.py"
   },
   "dependencies": {
     "firebase": "^12.5.0",

@@ -2,15 +2,19 @@
 
 ## Recorded checks (2026-11-03)
 
-Local production compilation succeeded using Node 24, TypeScript and Vite. ESLint passed. Six gameplay/content tests and twelve Firebase Realtime Database security-rule tests passed. Two Playwright tests passed against real local Auth and Database emulators using **three isolated Chromium contexts with three distinct anonymous identities**, at 390 × 844 and 360 × 780 mobile viewports.
+Production compilation and ESLint passed. Eleven unit tests (six gameplay/content and five configuration/isolation tests), twelve database-rule tests, and two independent-browser emulator tests passed in the [GitHub Actions checks for the configured release](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41673313008).
 
-That browser test created a party, joined via invitation links, synchronized a three-person lobby, readied/started, refreshed a private assignment, submitted three answers, synchronized discussion and reveal, replayed, toggled a player's network offline/online, submitted after reconnecting, reset the lobby, and changed the question language to Dutch. It checked for page JavaScript errors and horizontal overflow. A second test disconnected the host, waited for the real presence grace period, took over as host, removed the offline host, completed the two-player remainder of the round, reset, admitted a fourth independent client into the freed seat, started another round, and verified that the removed host lost access on reconnect. Screenshots were inspected for the welcome and reveal layouts.
+The [production Pages deployment](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41673312906) for commit `5ad2547` succeeded. The published HTTPS app then passed the live round test against the owner's actual Firebase project using **three isolated Chromium contexts with three distinct anonymous identities**, at a 390 × 844 mobile viewport. The live run took 25.4 seconds and covered join links, lobby readiness, private questions, answer submission, synchronized discussion/reveal, refresh, reconnection, replay, setup reset and a switch to Dutch questions. It reported no page JavaScript errors or horizontal overflow.
+
+A separate opt-in REST smoke test passed **28 live setup, authorization and phase checks** against a room it created. These included reading one's own assignment, rejecting peer assignment/vault reads, blocking early discussion/reveal reads, rejecting forged or duplicate answers and ordinary phase advances, publishing discussion/reveal only under host control, and hiding old discussion again after reset. The script did not touch another room and deleted only its three temporary test identities. It did not retrieve administrative credentials or print authentication tokens.
+
+Two emulator browser tests additionally passed at 390 × 844 and 360 × 780 mobile viewports. That browser test created a party, joined via invitation links, synchronized a three-person lobby, readied/started, refreshed a private assignment, submitted three answers, synchronized discussion and reveal, replayed, toggled a player's network offline/online, submitted after reconnecting, reset the lobby, and changed the question language to Dutch. It checked for page JavaScript errors and horizontal overflow. A second test disconnected the host, waited for the real presence grace period, took over as host, removed the offline host, completed the two-player remainder of the round, reset, admitted a fourth independent client into the freed seat, started another round, and verified that the removed host lost access on reconnect. Screenshots were inspected for the welcome and reveal layouts.
 
 The initial pushed implementation also passed the [GitHub Actions multiplayer/security workflow](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41657320436). Final local checks include the additional seat/start-race rules and host-recovery browser test. GitHub Pages deployment initially failed at Configure Pages because Pages was not enabled. An attempt to enable it through the GitHub integration returned HTTP 403; a repository owner must enable Pages with GitHub Actions as the source.
 
 Rule tests cover unauthenticated/broad reads, concurrent seat capacity, host settings and nickname restrictions, active/expired room admission, own-assignment privacy, vault secrecy, hidden results, duplicate/forged/overlong/stale responses, progress integrity, phase changes, replay/reset, fresh-identity-context reads, removed-player access, and delayed host takeover/vault ownership, missing host presence, start/admission races, and atomic seat/membership removal. Expected `permission_denied` warnings are successful negative cases.
 
-**Not verified by these checks:** physical phones, actual iOS Safari or Android Chrome, live Firebase quota/configuration, production security-rule deployment, or a successful GitHub Pages deployment. A local Chromium context is not a physical phone and the emulator is not the live Firebase service. Run the checklist below once configured.
+**Still unverified:** physical phones, actual iOS Safari/Android Chrome, and production load or free-quota limits beyond these small tests. Host takeover/removal was verified with emulator browsers; the live browser smoke covered the main three-player round and reconnect flow. Browser viewport emulation is not a physical-phone test. Run the checklist below for actual devices.
 
 ## Reproduce
 
@@ -22,6 +26,9 @@ npm run build
 npm run test:rules
 npx playwright install --with-deps chromium
 npm run test:e2e
+# Opt-in, real production data only in a test room:
+npm run test:live
+npm run test:live:rules
 ```
 
 Use Java 21+ for the Database emulator. Do not run both emulator test scripts simultaneously: they use the same ports. Stop a manually running emulator first. Rules tests have a loopback-only WebSocket shim because the Node Firebase SDK ignores `NO_PROXY`; all external proxy settings remain intact. `FIREBASE_EMULATORS_PATH` can point at a writable cache directory if the default cache is unavailable.
@@ -51,6 +58,6 @@ Record device/OS/browser versions, date, Firebase project, deployed commit, pass
 
 GitHub Pages was enabled with GitHub Actions as the source. The [Pages deployment workflow](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41662203992) succeeded and the published `/sneaky-queries/` app loaded over HTTPS. The latest implementation also passed [the full GitHub Actions checks](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41658405940).
 
-A production-browser round check was attempted with three isolated contexts. After resolving the managed environment's browser CA trust, the test loaded the app but could not create a party: the deployed build had all five Firebase web configuration values missing and displayed the explicit setup screen. No live multiplayer success is claimed. The user clarified that only GitHub Actions had been configured. Firebase project/account access is still required; the discovered Firebase integration was offered for account authorization. Physical phones remain untested.
+Earlier live attempts stopped at the explicit setup screen because Firebase configuration had not been supplied. The owner then completed project, anonymous-auth, database, rules and web-app setup from iPhone Safari and shared the public web configuration. The successful production checks recorded above supersede that initial setup blocker. The desktop Firebase plugin was not required.
 
 The initial direct Telegram workflow was replaced with a sender in the user's private notification repository. Six sender tests passed with mocked network calls. The real [setup-message workflow](https://github.com/h4sw5q2wr9-byte/Telegram-Tijnv50/actions/runs/41666985782) completed successfully and Telegram confirmed message delivery on 2026-11-03. Credentials were not read back, copied, or printed.
