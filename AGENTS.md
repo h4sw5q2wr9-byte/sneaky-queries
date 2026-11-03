@@ -4,7 +4,7 @@ Preserve the supplied 1.0 gameplay, Firebase synchronization, private assignment
 
 ## Completion notification preference
 
-The repository owner requested a Telegram update whenever work finishes or a question needs their input so they do not need to watch the chat. Send one brief, factual update at completion, or when blocked on an account action or answer only the user can provide, through the existing private sender:
+The repository owner requested a Telegram update whenever work finishes or a question needs their input so they do not need to watch the chat. Keep Telegram notifications very short: a done/needs-input signal, at most one short sentence about the outcome or question, and a link only when useful. Keep detailed summaries and test results in ChatGPT; do not duplicate them in Telegram. This preference update itself does not need a Telegram notification. Send one brief, factual update at completion, or when blocked on an account action or answer only the user can provide, through the existing private sender:
 
 ```sh
 gh workflow run notify.yml --repo h4sw5q2wr9-byte/Telegram-Tijnv50 --ref main -f message='Sneaky Queries: <outcome and any required next action>. https://h4sw5q2wr9-byte.github.io/sneaky-queries/'

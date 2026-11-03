@@ -150,7 +150,7 @@ The notification sender lives in the private repository `h4sw5q2wr9-byte/Telegra
 gh workflow run notify.yml --repo h4sw5q2wr9-byte/Telegram-Tijnv50 --ref main -f message='Sneaky Queries: work complete. Details: https://github.com/h4sw5q2wr9-byte/sneaky-queries'
 ```
 
-Inspect the sender's Actions run before claiming delivery. Its success means Telegram accepted the message. `AGENTS.md` records the user's preference for completion updates and questions that need their input when an agent works in this repository. Telegram replies are not forwarded into ChatGPT; answers still belong in this chat. This is an assistant-triggered notification, not a universal ChatGPT hook or a cross-repository automatic deployment event. No secret needs to be duplicated in the public game repository.
+Keep messages to a completion signal, one short sentence about the change, and a useful link. Detailed summaries belong in ChatGPT, not duplicated in Telegram. Inspect the sender's Actions run before claiming delivery. Its success means Telegram accepted the message. `AGENTS.md` records the user's preference for completion updates and questions that need their input when an agent works in this repository. Telegram replies are not forwarded into ChatGPT; answers still belong in this chat. This is an assistant-triggered notification, not a universal ChatGPT hook or a cross-repository automatic deployment event. No secret needs to be duplicated in the public game repository.
 
 ## Opt-in live multiplayer check
 
