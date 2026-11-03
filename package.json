@@ -15,7 +15,8 @@
     "test:live": "playwright test --config playwright.live.config.ts",
     "predev": "node scripts/prepare-firebase-setup.mjs",
     "prebuild": "node scripts/prepare-firebase-setup.mjs",
-    "test:live:rules": "python3 scripts/check-live-firebase.py"
+    "test:live:rules": "python3 scripts/check-live-firebase.py",
+    "test:passplay": "playwright test --config playwright.local.config.ts"
   },
   "dependencies": {
     "firebase": "^12.5.0",

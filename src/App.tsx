@@ -17,88 +17,43 @@ import {
   Settings2,
   ShieldQuestion,
   Sparkles,
+  Smartphone,
   Users,
   WifiOff,
   X,
 } from "lucide-react";
-import { categories } from "./data/questions";
+import { Button, Mask, Title } from "./components/ui";
+import { SettingsFields } from "./components/SettingsFields";
+import { LocalParty } from "./components/LocalParty";
 import { configured, emulator, identity } from "./lib/firebase";
-import { defaultSettings, maxImpostors, validSetup } from "./lib/game";
+import { defaultSettings, validSetup } from "./lib/game";
 import { localeDirection, translate } from "./lib/i18n";
 import type { StringKey } from "./lib/i18n";
 import * as api from "./lib/rooms";
 import type { Locale, RoomState, Settings } from "./lib/types";
 
-type Screen = "home" | "how" | "create" | "join" | "config";
+type Screen = "home" | "how" | "create" | "join" | "config" | "local";
 const savedLocale = (): Locale =>
   localStorage.getItem("sq-locale") === "nl" ? "nl" : "en";
-function Mask({ small = false }: { small?: boolean }) {
-  return (
-    <svg
-      className={small ? "mask small" : "mask"}
-      viewBox="0 0 140 100"
-      aria-hidden="true"
-    >
-      <path
-        className="mask-shape"
-        d="M8 38Q23 23 44 31L70 39 96 31Q117 23 132 38L125 67Q111 89 85 71L70 61 55 71Q29 89 15 67Z"
-      />
-      <path
-        d="M25 48q14-7 27 5-11 17-25 4ZM88 53q13-12 27-5l-2 9q-14 13-25-4Z"
-        fill="#271442"
-      />
-      <path
-        d="m4 18 6-9m115 7 8-7M64 12l4-10"
-        stroke="#ffadd8"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-function Button({
-  children,
-  secondary = false,
-  className = "",
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { secondary?: boolean }) {
-  return (
-    <button
-      className={`button ${secondary ? "secondary" : "primary"} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
-function Title({
-  eyebrow,
-  title,
-  sub,
-}: {
-  eyebrow?: string;
-  title: string;
-  sub?: string;
-}) {
-  return (
-    <div className="screen-title">
-      {eyebrow && <div className="eyebrow">{eyebrow}</div>}
-      <h1>{title}</h1>
-      {sub && <p>{sub}</p>}
-    </div>
-  );
-}
 export default function App() {
   const [locale, setLocale] = useState<Locale>(savedLocale);
   const t = useCallback((key: StringKey) => translate(locale, key), [locale]);
   const invite = new URLSearchParams(location.search).get("room") || "";
-  const [screen, setScreen] = useState<Screen>(invite ? "join" : "home");
+  const [screen, setScreen] = useState<Screen>(
+    invite
+      ? "join"
+      : new URLSearchParams(location.search).get("mode") === "local"
+        ? "local"
+        : "home",
+  );
   const [nickname, setNickname] = useState(
     localStorage.getItem("sq-nickname") || "",
   );
   const [codeInput, setCodeInput] = useState(invite.toUpperCase());
-  const [roomCode, setRoomCode] = useState(
-    sessionStorage.getItem("sq-room") || "",
+  const [roomCode, setRoomCode] = useState(() =>
+    !invite && new URLSearchParams(location.search).get("mode") === "local"
+      ? ""
+      : sessionStorage.getItem("sq-room") || "",
   );
   const [uid, setUid] = useState("");
   const [room, setRoom] = useState<RoomState | null>(null);
@@ -235,6 +190,12 @@ export default function App() {
     history.replaceState(null, "", url);
   }
   function go(screen: Screen) {
+    const url = new URL(location.href);
+    if (screen === "local") {
+      url.searchParams.set("mode", "local");
+      url.searchParams.delete("room");
+    } else url.searchParams.delete("mode");
+    history.replaceState(null, "", url);
     setError("");
     setScreen(screen);
     window.scrollTo(0, 0);
@@ -311,105 +272,12 @@ export default function App() {
     </div>
   );
   const setupFields = (inRoom = false) => (
-    <>
-      <div className="settings-grid">
-        <label>
-          {t("capacity")}
-          <select
-            aria-label={t("capacity")}
-            value={settings.capacity}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                capacity: Number(e.target.value),
-                impostors:
-                  settings.impostors === "random"
-                    ? "random"
-                    : (Math.min(
-                        settings.impostors,
-                        maxImpostors(Number(e.target.value)),
-                      ) as 1 | 2 | 3),
-              })
-            }
-          >
-            {Array.from({ length: 8 }, (_, i) => i + 3)
-              .filter((n) => !inRoom || n >= count)
-              .map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-          </select>
-        </label>
-        <label>
-          {t("impostors")}
-          <select
-            aria-label={t("impostors")}
-            value={settings.impostors}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                impostors:
-                  e.target.value === "random"
-                    ? "random"
-                    : (Number(e.target.value) as 1 | 2 | 3),
-              })
-            }
-          >
-            {[1, 2, 3]
-              .filter((n) => n <= maxImpostors(settings.capacity))
-              .map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            <option value="random">{t("random")}</option>
-          </select>
-        </label>
-      </div>
-      <p className="field-hint">{t("impostorHelp")}</p>
-      <label className="field-label">
-        {t("questionLanguage")}
-        <select
-          value={settings.locale}
-          onChange={(e) =>
-            setSettings({ ...settings, locale: e.target.value as Locale })
-          }
-        >
-          <option value="en">English</option>
-          <option value="nl">Nederlands</option>
-        </select>
-      </label>
-      <div className="section-label">
-        <h2>{t("categories")}</h2>
-        <span>{settings.categories.length}/10</span>
-      </div>
-      <p className="field-hint">{t("categoryHelp")}</p>
-      <div className="category-grid">
-        {categories.map((c) => (
-          <button
-            type="button"
-            aria-pressed={settings.categories.includes(c.id)}
-            className={`category ${settings.categories.includes(c.id) ? "selected" : ""}`}
-            key={c.id}
-            onClick={() =>
-              setSettings((s) => ({
-                ...s,
-                categories: s.categories.includes(c.id)
-                  ? s.categories.length > 1
-                    ? s.categories.filter((id) => id !== c.id)
-                    : s.categories
-                  : [...s.categories, c.id],
-              }))
-            }
-          >
-            <span>{c.emoji}</span>
-            <span>{c[locale]}</span>
-            {settings.categories.includes(c.id) && <Check size={13} />}
-          </button>
-        ))}
-      </div>
-    </>
+    <SettingsFields
+      settings={settings}
+      onChange={setSettings}
+      locale={locale}
+      minPlayers={inRoom ? count : 3}
+    />
   );
   const formNickname = (
     <label className="field-label">
@@ -834,7 +702,8 @@ export default function App() {
           )}
         </div>
       );
-  } else if (screen === "home")
+  } else if (screen === "local") content = <LocalParty locale={locale} />;
+  else if (screen === "home")
     content = (
       <>
         <section className="hero">
@@ -860,6 +729,20 @@ export default function App() {
                 {t("join")}
               </Button>
             </div>
+            <button
+              aria-label={t("passPlay")}
+              className="pass-play-entry"
+              onClick={() => go("local")}
+            >
+              <span className="pass-play-icon">
+                <Smartphone size={23} />
+              </span>
+              <span>
+                <strong>{t("passPlay")}</strong>
+                <small>{t("passPlaySub")}</small>
+              </span>
+              <ArrowRight size={18} />
+            </button>
             <div className="feature-row">
               <span>
                 <Users size={15} />
@@ -935,6 +818,17 @@ export default function App() {
               </div>
             </div>
           ))}
+          <div className="local-how-note">
+            <Smartphone size={20} />
+            <div>
+              <h2>{t("localHowTitle")}</h2>
+              <p>{t("localHowBody")}</p>
+              <button className="text-button" onClick={() => go("local")}>
+                {t("passPlay")}
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
           <p className="how-note">
             <Sparkles size={18} />
             {t("howNote")}

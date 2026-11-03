@@ -21,3 +21,6 @@
 - Connected the owner-approved Firebase web app through public configuration defaults, kept optional environment overrides, and added five tests ensuring demo emulator isolation.
 
 - Verified the published game against the live Firebase project with three independent browser identities and 28 live access checks; added a reusable opt-in permission smoke test.
+
+- Added Pass & Play beside online multiplayer: shared-phone setup, named cards, private reveal covers, one-time answers, grey completed cards, deliberate discussion/reveal, replay and setup reset.
+- Added safe local session recovery and background hiding, full English/Dutch UI, and shared setup controls; online room mechanics remain intact.

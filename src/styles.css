@@ -1572,3 +1572,294 @@ footer svg {
   padding-top: 14px;
   border-top: 1px solid var(--border);
 }
+
+/* Shared-phone play uses the same palette for every private turn. */
+.pass-play-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 14px;
+  padding: 14px 15px;
+  background: linear-gradient(100deg, #9d63ce13, #f777ba08);
+  border: 1px solid #b980ce36;
+  border-radius: 14px;
+  text-align: left;
+  transition:
+    background 0.18s,
+    transform 0.18s;
+}
+.pass-play-entry:hover {
+  background: #b16bc31b;
+  transform: translateY(-2px);
+}
+.pass-play-icon {
+  display: grid;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  border-radius: 12px;
+  background: #a265cb1c;
+  color: #e7b3ed;
+  flex-shrink: 0;
+}
+.pass-play-entry > span:nth-child(2) {
+  flex: 1;
+}
+.pass-play-entry strong {
+  display: block;
+  font-size: 0.86rem;
+  color: #ecd9f2;
+}
+.pass-play-entry small {
+  display: block;
+  font-size: 0.7rem;
+  color: #ac94bd;
+  margin-top: 2px;
+}
+.pass-play-entry > svg {
+  color: #c58bcb;
+}
+.local-how-note {
+  display: flex;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 17px;
+  margin-bottom: 23px;
+  background: #b76cc50a;
+}
+.local-how-note > svg {
+  color: #dc9bdb;
+  margin-top: 3px;
+}
+.local-how-note h2 {
+  font-size: 0.95rem;
+  margin-bottom: 7px;
+}
+.local-how-note p {
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+.local-mode-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #b49ac5;
+  font-size: 9px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  margin-bottom: 25px;
+}
+.local-names {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  margin: 20px 0 6px;
+}
+.local-names .section-label {
+  margin-bottom: 0;
+}
+.local-name-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 14px;
+}
+.local-names .field-hint {
+  margin-bottom: 16px;
+}
+.local-name-inputs .field-label {
+  min-width: 0;
+  margin-bottom: 19px;
+}
+.local-validation {
+  color: #f0b3cc;
+  font-size: 0.8rem;
+  margin: 0 0 20px;
+}
+.local-party .notice {
+  margin: 0 0 23px;
+}
+.local-party .error-banner {
+  margin: 0 0 23px;
+}
+.local-progress > span {
+  font-size: 0.78rem;
+  color: #bba4ce;
+}
+.local-progress .progress-track {
+  margin: 12px 0 24px;
+}
+.name-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 27px;
+}
+.name-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 13px;
+  text-align: left;
+  min-height: 155px;
+  padding: 19px;
+  border-radius: 19px;
+  background: linear-gradient(140deg, #7e48a516, #ffffff03);
+  border: 1px solid #b386ce36;
+  box-shadow: 0 8px 22px #05020817;
+  transition:
+    transform 0.18s,
+    border-color 0.18s,
+    background 0.18s;
+}
+.name-card:not(:disabled):hover {
+  transform: translateY(-3px);
+  border-color: #d986ca88;
+  background: #9a57991d;
+}
+.name-card-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  width: 100%;
+}
+.name-card-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  color: #b79ec6;
+  margin-top: auto;
+}
+.name-card.answered {
+  filter: grayscale(1);
+  opacity: 0.55;
+  background: #ffffff03;
+  border-color: #ad9bbc20;
+  box-shadow: none;
+}
+.name-card.answered .name-card-status {
+  color: #c3b5ca;
+}
+.local-cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 30px 25px;
+}
+.local-cover-seal {
+  width: 94px;
+  height: 94px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 27px;
+  border-radius: 50%;
+  border: 1px solid #c995dc35;
+  background: #af62c409;
+  color: #e5bbec;
+  box-shadow: 0 0 0 12px #ac68c005;
+}
+.local-cover > .avatar {
+  height: 48px;
+  width: 48px;
+  font-size: 1.1rem;
+  margin: 0 0 10px;
+}
+.local-cover h2 {
+  font-size: 1.35rem;
+  margin: 0 0 27px;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.local-cover .button + .button {
+  margin-top: 12px;
+}
+.local-private-name {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #d4b1dd;
+  margin-top: 20px;
+  overflow-wrap: anywhere;
+}
+.local-private-name + .question {
+  margin-top: 13px;
+}
+.local-handoff {
+  text-align: center;
+  padding: 38px 27px;
+}
+.local-handoff .screen-title h1 {
+  font-size: 2rem;
+}
+.local-handoff .screen-title p {
+  max-width: 370px;
+  margin: 16px auto 0;
+}
+.local-handoff .screen-title {
+  margin-bottom: 28px;
+}
+.local-handoff .success-orbit {
+  margin-bottom: 30px;
+}
+.local-confirm h1 {
+  font-size: 1.4rem;
+  line-height: 1.5;
+  letter-spacing: -0.4px;
+  margin-bottom: 25px;
+}
+@media (max-width: 600px) {
+  .pass-play-entry {
+    max-width: 350px;
+    margin: 13px auto 0;
+    padding: 12px 14px;
+  }
+  .pass-play-entry strong {
+    font-size: 0.83rem;
+  }
+  .pass-play-entry small {
+    font-size: 0.68rem;
+  }
+  .local-mode-label {
+    font-size: 8px;
+    letter-spacing: 1px;
+    margin-bottom: 21px;
+  }
+  .local-name-inputs {
+    grid-template-columns: 1fr;
+  }
+  .local-name-inputs .field-label {
+    margin-bottom: 17px;
+  }
+  .name-card {
+    padding: 16px;
+    min-height: 150px;
+    gap: 12px;
+  }
+  .name-card-grid {
+    gap: 10px;
+  }
+  .name-card-title {
+    font-size: 1rem;
+  }
+  .name-card-status {
+    font-size: 0.61rem;
+  }
+  .local-cover {
+    padding: 30px 20px;
+  }
+  .local-handoff {
+    padding: 32px 20px;
+  }
+  .local-handoff .screen-title h1 {
+    font-size: 1.85rem;
+  }
+}
+
+.local-party .screen-title h1 {
+  overflow-wrap: anywhere;
+}

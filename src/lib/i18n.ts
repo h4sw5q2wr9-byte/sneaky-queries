@@ -1,5 +1,49 @@
 import type { Locale } from "./types";
 const en = {
+  passPlay: "Pass & Play",
+  passPlaySub: "One phone. Everyone plays.",
+  localPlayerCount: "Player count",
+  localSetupTitle: "One phone. All the suspects.",
+  localSetupSub:
+    "Add everyone’s name, pick your setup, and pass the phone around.",
+  localNames: "Who’s playing?",
+  localPlayerName: "Player {n}",
+  localNameHint: "A different name for every player. The host plays too.",
+  localStart: "Deal the questions",
+  localCardsTitle: "Find your name.",
+  localCardsSub: "Take turns. Tap your own card when you’re holding the phone.",
+  localChooseName: "Choose your card",
+  localLocked: "Answer locked",
+  localTurnReady: "Tap for your turn",
+  localCoverTitle: "{name}, this is for you.",
+  localCoverSub:
+    "Hold the phone so only you can see it. Reveal your question when you’re ready.",
+  localRevealQuestion: "Reveal my question",
+  localNotMe: "That’s not my name",
+  localHideQuestion: "Hide question",
+  localHandoffTitle: "Answer locked. Poker face on.",
+  localHandoffSub:
+    "Your question is hidden. Pass the phone to the next player.",
+  localBackToCards: "Back to name cards",
+  localAllAnswered: "All answers are in.",
+  localAllAnsweredSub: "Bring everyone together. It’s time to compare answers.",
+  localContinue: "Continue to discussion",
+  localFinishFirst: "Everyone needs to lock in an answer first.",
+  localSaveError:
+    "This browser couldn’t save the party. Keep this page open to continue.",
+  localDuplicateNames:
+    "Give each player a different name so everyone can find their card.",
+  localMissingNames: "Enter a name of 1–20 characters for every player.",
+  localFreshParty: "New players",
+  localFreshConfirm: "Clear the names and question history for a fresh party?",
+  localAbortConfirm: "Return to setup? This round’s answers will be cleared.",
+  localHowTitle: "Sharing one phone?",
+  localHowBody:
+    "Choose Pass & Play, enter your names, and tap your own card. Reveal and answer privately, then pass the phone. Completed cards turn grey. Continue together when everyone is done.",
+  localDiscussSub:
+    "Everyone’s answered. Compare the answers out loud, then reveal together.",
+  localModeHint: "On this phone · 3–10 players",
+
   tagline: "TRUST YOUR FRIENDS. MAYBE.",
   revealLabel: "Reveal",
   cardTagline: "SOMETHING SEEMS OFF.",
@@ -16,7 +60,7 @@ const en = {
   create: "Create a party",
   join: "Join a party",
   players: "3–10 players",
-  phones: "One phone each",
+  phones: "Online or one phone",
   free: "Free. No sign-up.",
   how: "A little suspicious.",
   howSub: "A lot of fun. Here’s how it works.",
@@ -159,6 +203,53 @@ const en = {
   error_joinFailed: "Couldn’t join. Please try again.",
 };
 const nl: typeof en = {
+  passPlay: "Geef door & speel",
+  passPlaySub: "Eén telefoon. Iedereen doet mee.",
+  localPlayerCount: "Aantal spelers",
+  localSetupTitle: "Eén telefoon. Alle verdachten.",
+  localSetupSub:
+    "Vul alle namen in, kies je instellingen en geef de telefoon door.",
+  localNames: "Wie spelen er mee?",
+  localPlayerName: "Speler {n}",
+  localNameHint: "Een andere naam voor elke speler. De host speelt ook mee.",
+  localStart: "Deel de vragen uit",
+  localCardsTitle: "Zoek je naam.",
+  localCardsSub:
+    "Om de beurt. Tik op je eigen kaart als je de telefoon vasthoudt.",
+  localChooseName: "Kies je kaart",
+  localLocked: "Antwoord staat vast",
+  localTurnReady: "Tik voor je beurt",
+  localCoverTitle: "{name}, dit is voor jou.",
+  localCoverSub:
+    "Houd de telefoon zo dat alleen jij het scherm ziet. Onthul je vraag als je klaar bent.",
+  localRevealQuestion: "Onthul mijn vraag",
+  localNotMe: "Dat is niet mijn naam",
+  localHideQuestion: "Verberg de vraag",
+  localHandoffTitle: "Antwoord staat vast. Pokerface aan.",
+  localHandoffSub:
+    "Je vraag is verborgen. Geef de telefoon door aan de volgende speler.",
+  localBackToCards: "Terug naar de naamkaarten",
+  localAllAnswered: "Alle antwoorden zijn binnen.",
+  localAllAnsweredSub: "Kom bij elkaar. Tijd om de antwoorden te vergelijken.",
+  localContinue: "Verder naar de discussie",
+  localFinishFirst: "Iedereen moet eerst een antwoord vastzetten.",
+  localSaveError:
+    "Deze browser kon de party niet bewaren. Houd deze pagina open om verder te spelen.",
+  localDuplicateNames:
+    "Geef elke speler een andere naam zodat iedereen de eigen kaart kan vinden.",
+  localMissingNames: "Vul voor elke speler een naam van 1–20 tekens in.",
+  localFreshParty: "Nieuwe spelers",
+  localFreshConfirm:
+    "De namen en vraaggeschiedenis wissen voor een nieuwe party?",
+  localAbortConfirm:
+    "Terug naar instellen? De antwoorden van deze ronde worden gewist.",
+  localHowTitle: "Delen jullie één telefoon?",
+  localHowBody:
+    "Kies Geef door & speel, vul je namen in en tik op je eigen kaart. Onthul en beantwoord je vraag privé en geef de telefoon door. Voltooide kaarten worden grijs. Ga samen verder als iedereen klaar is.",
+  localDiscussSub:
+    "Iedereen heeft geantwoord. Vergelijk de antwoorden hardop en onthul daarna samen.",
+  localModeHint: "Op deze telefoon · 3–10 spelers",
+
   tagline: "VERTROUW JE VRIENDEN. MISSCHIEN.",
   revealLabel: "Onthulling",
   cardTagline: "ER KLOPT IETS NIET.",
@@ -175,7 +266,7 @@ const nl: typeof en = {
   create: "Maak een party",
   join: "Doe mee",
   players: "3–10 spelers",
-  phones: "Ieder een telefoon",
+  phones: "Online of één telefoon",
   free: "Gratis. Geen registratie.",
   how: "Een beetje verdacht.",
   howSub: "Heel veel lol. Zo werkt het.",

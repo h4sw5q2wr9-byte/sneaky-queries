@@ -61,3 +61,24 @@ GitHub Pages was enabled with GitHub Actions as the source. The [Pages deploymen
 Earlier live attempts stopped at the explicit setup screen because Firebase configuration had not been supplied. The owner then completed project, anonymous-auth, database, rules and web-app setup from iPhone Safari and shared the public web configuration. The successful production checks recorded above supersede that initial setup blocker. The desktop Firebase plugin was not required.
 
 The initial direct Telegram workflow was replaced with a sender in the user's private notification repository. Six sender tests passed with mocked network calls. The real [setup-message workflow](https://github.com/h4sw5q2wr9-byte/Telegram-Tijnv50/actions/runs/41666985782) completed successfully and Telegram confirmed message delivery on 2026-11-03. Credentials were not read back, copied, or printed.
+
+
+## Pass & Play acceptance
+
+The shared-phone mode reuses the same question/assignment logic and keeps online Firebase rooms separate. Seven additional unit tests cover valid/unique names, distinct three-impostor variations, one-time answers, phase gates, replay/reset history, canonical restoration after refresh, corrupted saved data, and complete Dutch questions.
+
+Browser checks cover a three-person shared-phone round, explicit reveal covers, hiding questions and drafts after refresh/background events, grey disabled completed cards, saved-answer recovery, discussion/reveal, replay, cancel/reset, and completing a loaded round with the network disconnected. A seven-player case verifies three distinct impostor questions, Dutch UI/content, long names at 320 px and impostor clamping when reducing the player count. A routing case verifies that switching from an invitation to Pass & Play keeps the local route after refresh, even when an older online room is remembered. The first shared-phone test also verifies that no Firebase backend requests were made.
+
+For actual phones, additionally check:
+
+1. Enter 3–10 unique names, including long names, and select categories/impostors. At least one category stays enabled; impostors stay a minority.
+2. Pass the phone in any order. Only tap your own card. The cover must show the name before a deliberate question reveal, with the same private layout for every player.
+3. Lock an answer. No question or answer should remain on the handoff screen; the completed name card must be grey and disabled. Continue stays disabled until all have answered.
+4. Background and reopen the phone during a private question. Repeat with refresh. The name-card screen should return, preserving completed answers and assignments; an unsubmitted draft is intentionally cleared.
+5. Compare named answers, reveal all impostors and their actual questions, replay without immediate question repeats, and change setup while retaining names/history. New players can clear the local party with confirmation.
+6. Once the page is loaded, disconnect the network and finish a round. Do not expect a brand-new page load or offline refresh to work without a cached website.
+7. Return to the home screen and create/join an online party. Local state must not join a Firebase room or alter another online player.
+
+Physical iPhone Safari / Android Chrome testing remains separate from Chromium viewport tests.
+
+Pass & Play implementation checks: build and lint passed; all 18 unit tests passed. The combined browser suite passed all five tests (two online, three shared-phone/routing cases). The standalone shared-phone suite was rerun after the final route/ID validation changes. Live-site verification is recorded after deployment.

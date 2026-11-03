@@ -1,10 +1,19 @@
 # Sneaky Queries 1.0
 
-**Same friends. Different questions.** A mobile-first, real-time party game for 3–10 players. React + TypeScript + Vite, anonymous Firebase Authentication, Firebase Realtime Database, and GitHub Pages. No registration, voting, scores, or paid backend required.
+**Same friends. Different questions.** A mobile-first party game for 3–10 players, with real-time online rooms and shared-phone Pass & Play. React + TypeScript + Vite, anonymous Firebase Authentication, Firebase Realtime Database, and GitHub Pages. No registration, voting, scores, or paid backend required.
 
 This revival follows the supplied October 2025 mechanics and purple/pink design direction. Its 100 question sets are **newly written starter content**, not recovered originals. Each has an original and three variations, fully available in English and Dutch. The eight other planned languages are intentionally not offered until their UI and question translations are complete.
 
 Play at **https://h4sw5q2wr9-byte.github.io/sneaky-queries/**. The configured production app passed a full round with three independent browser identities and live database access checks. Physical-phone acceptance testing is still listed separately.
+
+## Choose how to play
+
+- **Online party:** create or join a Firebase room, with each player using their own phone. Live room codes, readiness, private questions, synchronized results and host controls remain available.
+- **Pass & Play:** tap the shared-phone option on the home screen (or open `?mode=local`). Choose 3–10 players, enter a different name for each, and pick impostors, categories and question language. Tap your own name card, explicitly reveal your question, submit once, then pass the phone. Completed cards become grey and disabled. Discussion stays locked until everyone answers. Reveal together, replay, or change the setup.
+
+Both modes use the same original mechanics, 100 bilingual question sets, distinct impostor variations and no-repeat question history. You can try the whole Pass & Play flow alone by entering three names and taking each turn yourself.
+
+Pass & Play uses this browser tab's session storage and requires no Firebase login or room. Once the page has loaded, a local round can finish without a network connection. Loading/reloading the website while offline is not guaranteed. Refresh restores the same assignments and submitted answers to a neutral name-card screen; private selection and drafts are not persisted. Backgrounding the page closes a private question. Closing the tab or clearing its storage can lose the party. Its data is readable to someone inspecting that shared browser's storage; the privacy cover is a turn-taking aid, not encryption or strong anti-cheat protection.
 
 ## Run locally
 
@@ -87,7 +96,10 @@ Used question IDs persist in the room. Enabled questions do not repeat until tha
 ```text
 src/App.tsx                 All game screens, live subscriptions and host coordinator
 src/styles.css              Purple/pink responsive design, reveal and reduced motion
-src/lib/game.ts             Pure setup, assignment, randomness, question history logic
+src/lib/game.ts             Shared assignment, randomness and question history logic
+src/lib/local.ts            Pass & Play lifecycle and safe session restoration
+src/components/LocalParty.tsx Shared-phone setup, name cards and private turns
+src/components/SettingsFields.tsx Shared online/local setup controls
 src/lib/rooms.ts             Firebase operations, admission, progress, presence and recovery
 src/lib/firebase.ts          Anonymous session identity and Firebase SDK initialization
 src/lib/config.ts            Public defaults, environment overrides and demo isolation
@@ -113,7 +125,8 @@ npm test            # Pure gameplay and bilingual content checks
 npm run lint
 npm run build
 npm run test:rules  # Real Realtime Database rules in the Firebase emulator
-npm run test:e2e    # Auth + database emulators, three isolated Chromium contexts
+npm run test:e2e    # Online and local browser flows, with Firebase emulators
+npm run test:passplay # Shared-phone browser flows, no backend or emulator required
 ```
 
 For browser tests install Chromium with `npx playwright install --with-deps chromium`. On Linux, `/usr/bin/chromium` is used if present. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` for a different installed browser. CI installs Playwright Chromium. Unit and emulator tests need no live Firebase credentials. See [docs/TESTING.md](docs/TESTING.md) for actual-phone tests and the recorded verification limits. Build and emulator success do not prove production credentials, Firebase deployment, Safari compatibility, or real cross-device operation.
