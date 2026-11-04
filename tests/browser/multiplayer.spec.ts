@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { createOnline, expectScreenFit } from "./helpers";
+import {
+  createOnline,
+  expectScreenFit,
+  pickLanguage,
+  revealOnline,
+} from "./helpers";
 import type { BrowserContext, Page } from "@playwright/test";
 test("three independent phones complete synchronized rounds, refresh, reconnect, replay, and reset", async ({
   browser,
@@ -25,8 +30,11 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
   try {
     await host.goto("./");
     await expect(
-      host.getByRole("heading", { name: "Same friends. Different questions." }),
+      host.getByRole("heading", { name: /Sneaky Queries/ }),
     ).toBeVisible();
+    await expect(host.locator(".hero-tagline")).toContainText(
+      "Different questions.",
+    );
     await host.screenshot({
       path: "test-results/home-mobile.png",
       fullPage: true,
@@ -64,12 +72,15 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
     await host.getByRole("button", { name: "Start the round" }).click();
     for (const page of pages)
       await expect(
-        page.getByRole("heading", { name: "Your turn." }),
+        page.getByRole("heading", { name: "Your secret question is in." }),
       ).toBeVisible();
+    for (const page of pages) await expectScreenFit(page);
+    for (const page of pages) await revealOnline(page);
     for (const page of pages) await expectScreenFit(page);
     const question = await alice.locator(".question").textContent();
     await alice.reload();
-    await expect(alice.locator(".question")).toHaveText(question!);
+    // A refresh closes the private card again; the assignment is unchanged.
+    expect(await revealOnline(alice)).toBe(question);
     for (let i = 0; i < pages.length; i++) {
       await pages[i]
         .getByRole("textbox", { name: "Your answer" })
@@ -109,11 +120,12 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
     await host.getByRole("button", { name: "Play again", exact: true }).click();
     for (const page of pages)
       await expect(
-        page.getByRole("heading", { name: "Your turn." }),
+        page.getByRole("heading", { name: "Your secret question is in." }),
       ).toBeVisible();
     await contexts[1].setOffline(true);
     await alice.waitForTimeout(700);
     await contexts[1].setOffline(false);
+    await revealOnline(alice);
     await expect(
       alice.getByRole("button", { name: "Lock in my answer" }),
     ).toBeVisible();
@@ -124,7 +136,7 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
     await expect(
       alice.getByRole("heading", { name: "Looking innocent?" }),
     ).toBeVisible();
-    await host.locator("summary").click();
+    await host.getByRole("button", { name: "Players & connection" }).click();
     await host.getByRole("button", { name: "Back to setup" }).click();
     await host.getByRole("button", { name: "Confirm", exact: true }).click();
     for (const page of pages)
@@ -132,18 +144,18 @@ test("three independent phones complete synchronized rounds, refresh, reconnect,
     await host
       .getByRole("button", { name: "Change setup", exact: true })
       .click();
-    await host
-      .getByRole("combobox", { name: "Language", exact: true })
-      .selectOption("nl");
+    await pickLanguage(host, "nl");
     await expect(alice.locator("html")).toHaveAttribute("lang", "nl");
-    await host.getByRole("button", { name: "Verder", exact: true }).click();
+    await expect(
+      alice.getByRole("radio", { name: "Nederlands", exact: true }),
+    ).toBeDisabled();
     await host
       .getByRole("button", { name: "Instellingen opslaan", exact: true })
       .click();
     await host
       .getByRole("button", { name: "Start de ronde", exact: true })
       .click();
-    await expect(host.locator(".question")).toContainText("?");
+    expect(await revealOnline(host, "nl")).toContain("?");
     for (const page of pages) {
       expect(
         await page.evaluate(
@@ -198,7 +210,8 @@ test("host loss, takeover, removal, and refilling a vacated seat do not strand a
         .getByRole("button", { name: "I’m ready", exact: true })
         .click();
     await host.getByRole("button", { name: "Start the round" }).click();
-    await expect(alice.locator(".question")).toBeVisible();
+    await revealOnline(alice);
+    await revealOnline(bob);
     await contexts[0].setOffline(true);
     for (const page of [alice, bob]) {
       await page
@@ -210,7 +223,7 @@ test("host loss, takeover, removal, and refilling a vacated seat do not strand a
       alice.getByRole("button", { name: "Become host" }),
     ).toBeEnabled({ timeout: 65000 });
     await alice.getByRole("button", { name: "Become host" }).click();
-    await alice.locator("summary").click();
+    await alice.getByRole("button", { name: "Players & connection" }).click();
     await alice
       .getByRole("button", { name: "Remove Original host", exact: true })
       .click();
@@ -236,7 +249,7 @@ test("host loss, takeover, removal, and refilling a vacated seat do not strand a
       alice.getByRole("button", { name: "Start the round" }),
     ).toBeEnabled();
     await alice.getByRole("button", { name: "Start the round" }).click();
-    await expect(charlie.locator(".question")).toBeVisible();
+    await revealOnline(charlie);
     await contexts[0].setOffline(false);
     await expect(
       host.getByRole("heading", { name: "You’re no longer in this party." }),
