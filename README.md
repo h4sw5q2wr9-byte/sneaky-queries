@@ -94,25 +94,34 @@ Used question IDs persist in the room. Enabled questions do not repeat until tha
 ## Source map
 
 ```text
-src/App.tsx                 All game screens, live subscriptions and host coordinator
-src/styles.css              Purple/pink responsive design, reveal and reduced motion
-src/lib/game.ts             Shared assignment, randomness and question history logic
-src/lib/local.ts            Pass & Play lifecycle and safe session restoration
-src/components/LocalParty.tsx Shared-phone setup, name cards and private turns
-src/components/SetupWizard.tsx Shared two-step setup and paged name entry
-src/components/RoundViews.tsx Paged discussion answers and impostor reveal
-src/components/PlayerRoster.tsx Paged online lobby and host management
-src/components/Pager.tsx     Compact, labelled navigation controls
-src/lib/rooms.ts             Firebase operations, admission, progress, presence and recovery
-src/lib/firebase.ts          Anonymous session identity and Firebase SDK initialization
-src/lib/config.ts            Public defaults, environment overrides and demo isolation
-src/data/firebase.web.json   Owner-approved public web app configuration
-src/lib/types.ts             Shared game and database types
-src/lib/i18n.ts              Centralized English/Dutch UI strings and layout direction
-src/data/questions.ts        100 sets × 4 questions × 2 complete locales
-scripts/generate-rules.mjs   Database rule source
-tests/                     Game, rules and independent-browser tests
-.github/workflows/          Pages deployment and emulator/browser CI
+src/App.tsx                    Orchestration: routing, locale, header, sheets, toasts
+src/main.tsx                   Fonts (self-hosted) and stylesheet order
+src/screens/                   One file per stage of play
+  Home.tsx                     Animated home, illustrated mode cards, online sheet
+  SetupFlow.tsx                Create / Pass & Play / edit setup in focused steps
+  JoinParty.tsx                Six-tile code entry and name tag
+  OnlineParty.tsx              Lobby ticket + seats, private turn, waiting, results
+  PassPlay.tsx                 Shared-phone lifecycle, name cards, handoff
+src/components/brand/          Mascot and wordmark (original SVG)
+src/components/ui/             Button, Sheet, Screen, Pager, Avatar, LanguageToggle, Burst
+src/components/game/           SecretCard (cover/reveal/answer), RoundResults,
+                               SetupControls, HowToPlay
+src/hooks/useRoom.ts           Firebase room subscription, presence, host auto-finish
+src/hooks/useViewport.ts       Preserved Safari keyboard viewport fix, motion/height queries
+src/styles/                    base (tokens) → shell → components → home → setup → play → adaptive
+src/lib/game.ts                Shared assignment, randomness and question history logic
+src/lib/local.ts               Pass & Play lifecycle and safe session restoration
+src/lib/rooms.ts               Firebase operations, admission, progress, presence and recovery
+src/lib/firebase.ts            Anonymous session identity and Firebase SDK initialization
+src/lib/config.ts              Public defaults, environment overrides and demo isolation
+src/lib/sound.ts               Optional Web Audio blips (no files, user-toggled)
+src/lib/i18n.ts                Centralized English/Dutch UI strings
+src/data/questions.ts          100 sets × 4 questions × 2 complete locales
+src/data/firebase.web.json     Owner-approved public web app configuration
+scripts/generate-rules.mjs     Database rule source
+docs/DESIGN.md                 Visual concept, tokens and screen patterns
+tests/                         Game, rules and independent-browser tests
+.github/workflows/             Pages deployment and emulator/browser CI
 ```
 
 ## Adding content and languages
@@ -134,13 +143,15 @@ npm run test:passplay # Shared-phone browser flows, no backend or emulator requi
 
 For browser tests install Chromium with `npx playwright install --with-deps chromium`. On Linux, `/usr/bin/chromium` is used if present. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` for a different installed browser. CI installs Playwright Chromium. Unit and emulator tests need no live Firebase credentials. See [docs/TESTING.md](docs/TESTING.md) for actual-phone tests and the recorded verification limits. Build and emulator success do not prove production credentials, Firebase deployment, Safari compatibility, or real cross-device operation.
 
-## Accessibility and scope
+## Design, accessibility and scope
 
-Dark mode only, with a charcoal app shell, vivid purple actions, magenta accents, layered game cards, circular avatars, compact contextual bars, card flips, answer-lock stamps and brief reveal confetti. The home hub has two side-by-side mode tiles; the lobby uses room-code tiles and a player deck. Private turns separate the question card, inset answer input and bottom action bar. System typography follows the device. OS reduced-motion preferences disable movement.
+The 2.0 frontend follows a "playful premium" concept — midnight plum backgrounds, candy-pink and electric-violet gradients, warm-white cards, mint/sun highlights, an original sideways-glancing speech-bubble mascot, Fredoka display type and Plus Jakarta Sans body type (self-hosted; no external font request). See [docs/DESIGN.md](docs/DESIGN.md).
 
-The app uses the available mobile viewport, including software-keyboard resizing. Setup is split into two steps; names, player cards, online rosters and discussion answers use four items per page; impostors reveal one per page. Primary actions stay at the bottom of their screen. Long text, unusually short viewports and keyboard entry can scroll inside a bounded region, rather than creating a long webpage.
+Every screen shares one skeleton: compact top bar (back/leave, live room chip, the single EN/NL party-language toggle), a body that fits the viewport, and a bottom-anchored action dock. Secondary tasks open as bottom sheets. Player cards, online seats and discussion answers are paginated; impostors reveal one per page. Long text, unusually short viewports and keyboard entry scroll inside a bounded region rather than the page. Wide screens show a brand panel beside a framed phone-width game.
 
-Large touch targets, labelled fields, keyboard focus rings, live errors, semantic progress, safe text rendering, and reduced-motion support. Typography uses the native system font stack; no external font request is needed. The provided web configuration includes a measurement ID, but the app does not initialize Google Analytics or collect analytics events. No external illustration services. V1 intentionally has no mandatory voting, scores, or leaderboard.
+Private turns look identical for every player and role: a sealed card, an explicit reveal, the question, and the answer note. Avatars depend only on seat order. Sound effects are optional, quiet, triggered only by play, and can be switched off in Settings. OS reduced-motion preferences remove all animation, including the reveal drumroll.
+
+Large touch targets, labelled fields, focus rings, live errors, semantic progress and safe text rendering. The app does not initialize analytics. No mandatory voting, scores, or leaderboard.
 
 ## Telegram completion updates
 

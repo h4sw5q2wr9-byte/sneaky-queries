@@ -361,6 +361,18 @@
     z-index: 1;
     max-width: 440px;
   }
+  /* The side panel carries the brand; the framed game leads with play. */
+  .screen-home .hero-title,
+  .screen-home .hero-tagline {
+    display: none;
+  }
+  .screen-home .hero-stage {
+    height: 220px;
+  }
+  .screen-home .hero-mascot {
+    width: 220px;
+    height: 183px;
+  }
   .desktop-aside .wordmark {
     font-size: 76px;
   }

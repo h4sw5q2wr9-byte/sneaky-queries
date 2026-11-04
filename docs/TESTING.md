@@ -1,5 +1,11 @@
 # Validation and phone test plan
 
+## 2.0 frontend rebuild (branch `claude/sneaky-queries-reimagined`, not deployed)
+
+Run locally in the cloud development container on 2026-11-04: ESLint, production build, 20 unit tests, 12 database-rule tests (Firebase emulator), and all 8 browser tests with Firebase emulators — three independent online identities completing a round with refresh, reconnect, replay, reset and a Dutch switch; host loss, takeover, removal and seat refill; Pass & Play private turns, refresh/background recovery and offline play with zero Firebase requests; seven-player Dutch play with three distinct impostor variations; invitation routing; ten-player layouts at 320 × 568, 375 × 667 and 390 × 844 including reduced motion and simulated keyboard resize/panning. The 6 Pass & Play tests also passed without emulators. Screens were reviewed from rendered screenshots at 320 × 568, 375 × 667, 390 × 844, 430 × 932 and 1440 × 900.
+
+**Not verified:** the production Firebase project and the live site (this branch is not deployed; `npm run test:live` was not run), GitHub Actions CI for the branch at the time of writing, physical iPhones, real iOS Safari keyboard behaviour and home-screen installation.
+
 ## Latest fix: iPhone keyboard positioning
 
 The [Pages deployment for `4228038`](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41729788371) and [CI](https://github.com/h4sw5q2wr9-byte/sneaky-queries/actions/runs/41729788303) succeeded. CI passed build/lint, 20 unit tests, 12 security-rule tests and eight browser tests. All seven live-site checks passed in 56.4 seconds, including the expanded keyboard height/panning/dismissal regression checks at all three phone sizes and a synchronized round with three independent Firebase identities. These are browser simulations; the supplied physical-iPhone bug report motivated the fix, but the assistant did not operate an actual iPhone after deployment.

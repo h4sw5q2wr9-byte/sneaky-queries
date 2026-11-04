@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.0 (in review) — 2026-11-04
+
+- Rebuilt the entire frontend from a new "playful premium" concept: original mascot and app icon, self-hosted Fredoka/Plus Jakarta Sans, plum/pink/violet tokens, seat-based critter avatars, jelly buttons and bottom sheets.
+- New screens: animated home with illustrated mode cards, focused setup steps with name tags, count rail, impostor line-up and category chips, six-tile code entry, ticket lobby with live seats, sealed-envelope private reveal with card flip, lined answer note, handoff and waiting stages, chat-bubble discussion, skippable drumroll reveal with masked impostors and line-up.
+- Online players now also open their private question with an explicit tap (same screen for everyone).
+- Optional synthesized sound effects; desktop brand panel; maskable manifest icon.
+- Gameplay, Firebase data model, security rules, question content and Pass & Play privacy behaviour are unchanged. The GPT-built 1.0 UI remains on `backup/gpt-v1-before-claude-2026-11-04`.
+
 ## 1.0.0 — 2026-11-03
 
 - Revived the supplied private-question party mechanic and purple/magenta visual direction.
