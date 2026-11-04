@@ -5,6 +5,8 @@ import {
   expectScreenFit,
   fillLocalNames,
   localOptions,
+  pickCount,
+  pickLanguage,
   submitPrivate,
   text,
 } from "./helpers";
@@ -57,17 +59,22 @@ test("Pass & Play completes private turns, safe refresh, discussion, reveal and 
   expect(launcher.icons).toEqual([
     { ok: true, width: 192, height: 192 },
     { ok: true, width: 512, height: 512 },
+    { ok: true, width: 512, height: 512 },
   ]);
   expect(launcher.touch).toBe(true);
 
-  await expect(page.locator(".deck-card.front")).toHaveCSS(
+  await expect(page.locator(".hero-mascot .mascot-pupils")).toHaveCSS(
     "animation-name",
-    "frontFloat",
+    "glance",
   );
   await page.getByRole("button", { name: "Pass & Play", exact: true }).click();
   await fillLocalNames(page, ["Alice", "Bob", "Cara"]);
   await localOptions(page);
-  await expect(page.getByRole("combobox")).toHaveCount(1); // The one global language choice.
+  // The one global language choice, and no second setup language selector.
+  await expect(page.getByRole("radiogroup", { name: "Language" })).toHaveCount(
+    1,
+  );
+  await expect(page.getByRole("combobox")).toHaveCount(0);
   await page
     .getByRole("button", { name: "Deal the questions", exact: true })
     .click();
@@ -80,7 +87,7 @@ test("Pass & Play completes private turns, safe refresh, discussion, reveal and 
     animations: "disabled",
   });
   const first = await choosePrivate(page, "Alice");
-  await expect(page.locator(".question-panel")).toHaveCSS(
+  await expect(page.locator(".question-card")).toHaveCSS(
     "animation-name",
     "cardTurn",
   );
@@ -165,9 +172,7 @@ test("Pass & Play has one language choice, seven players, paged reveals and Dutc
 }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("./?mode=local");
-  await page
-    .getByRole("combobox", { name: "Language", exact: true })
-    .selectOption("nl");
+  await pickLanguage(page, "nl");
   const names = [
     "AlexandervanderBerg",
     "Bo",
@@ -179,7 +184,7 @@ test("Pass & Play has one language choice, seven players, paged reveals and Dutc
   ];
   await fillLocalNames(page, names, "nl");
   await localOptions(page, "nl");
-  await expect(page.getByRole("combobox")).toHaveCount(1);
+  await expect(page.getByRole("radiogroup", { name: "Taal" })).toHaveCount(1);
   await page
     .getByRole("group", { name: "Impostors", exact: true })
     .getByRole("button", { name: "3", exact: true })
@@ -188,7 +193,7 @@ test("Pass & Play has one language choice, seven players, paged reveals and Dutc
     .getByRole("button", { name: "Deel de vragen uit", exact: true })
     .click();
   await expect(
-    page.getByRole("combobox", { name: "Taal", exact: true }),
+    page.getByRole("radio", { name: "English", exact: true }),
   ).toBeDisabled();
   const seen: Record<string, string> = {};
   for (const name of names) {
@@ -224,11 +229,9 @@ test("Pass & Play has one language choice, seven players, paged reveals and Dutc
     .getByRole("button", { name: "Instellingen wijzigen", exact: true })
     .click();
   await expect(
-    page.getByRole("combobox", { name: "Taal", exact: true }),
+    page.getByRole("radio", { name: "English", exact: true }),
   ).toBeEnabled();
-  await page
-    .getByRole("combobox", { name: "Aantal spelers", exact: true })
-    .selectOption("3");
+  await pickCount(page, "Aantal spelers", 3);
   await page.getByRole("button", { name: "Verder", exact: true }).click();
   await expect(
     page
@@ -263,13 +266,10 @@ for (const size of [
     await page.setViewportSize(size);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("./");
-    if (size.lang === "nl")
-      await page
-        .getByRole("combobox", { name: "Language", exact: true })
-        .selectOption("nl");
+    if (size.lang === "nl") await pickLanguage(page, "nl");
     const t = (key: Parameters<typeof text>[1]) => text(size.lang, key);
     await expectScreenFit(page);
-    await expect(page.locator(".deck-card.front")).toHaveCSS(
+    await expect(page.locator(".hero-mascot .mascot-pupils")).toHaveCSS(
       "animation-name",
       "none",
     );
@@ -285,7 +285,8 @@ for (const size of [
     await fillLocalNames(page, names, size.lang);
     await expectScreenFit(page);
     await localOptions(page, size.lang);
-    await expectScreenFit(page);
+    // The tiniest phones may scroll the category list inside its own region.
+    await expectScreenFit(page, size.height < 600);
     await page.screenshot({
       path: `test-results/setup-${size.width}.png`,
       animations: "disabled",

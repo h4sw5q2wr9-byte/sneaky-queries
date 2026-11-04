@@ -1,0 +1,366 @@
+/* ---------- Software keyboard open: keep the answer & action in view ---------- */
+.app-shell[data-keyboard="true"] .top-bar,
+.app-shell[data-keyboard="true"] .emulator-banner,
+.app-shell[data-keyboard="true"] .heading p,
+.app-shell[data-keyboard="true"] .heading .kicker,
+.app-shell[data-keyboard="true"] .setup-progress,
+.app-shell[data-keyboard="true"] .question-card-top,
+.app-shell[data-keyboard="true"] .question-round,
+.app-shell[data-keyboard="true"] .answer-hint,
+.app-shell[data-keyboard="true"] .manage-link {
+  display: none;
+}
+.app-shell[data-keyboard="true"] .screen-body {
+  gap: 8px;
+  padding-top: 8px;
+}
+.app-shell[data-keyboard="true"] .heading h1 {
+  font-size: 22px;
+}
+.app-shell[data-keyboard="true"] .question-card {
+  flex: 0 1 auto;
+  padding: 10px 14px;
+  border-radius: 20px;
+  gap: 4px;
+}
+.app-shell[data-keyboard="true"] .question-card .question {
+  font-size: 18px;
+}
+.app-shell[data-keyboard="true"] .answer-note {
+  padding: 8px 12px;
+  rotate: 0deg;
+}
+.app-shell[data-keyboard="true"] .answer-note textarea {
+  min-height: 34px;
+  max-height: 66px;
+  font-size: 17px;
+}
+.app-shell[data-keyboard="true"] .action-dock {
+  padding-top: 6px;
+  padding-bottom: 8px;
+}
+.app-shell[data-keyboard="true"] .name-tag.big .name-tag-hello {
+  display: none;
+}
+
+/* ---------- Short screens (iPhone SE and smaller) ---------- */
+@media (max-height: 700px) {
+  .heading h1 {
+    font-size: 26px;
+  }
+  .heading p {
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .screen-body {
+    gap: 11px;
+  }
+  .hero-stage {
+    height: 112px;
+  }
+  .hero-mascot {
+    width: 124px;
+    height: 104px;
+  }
+  .wordmark {
+    font-size: 44px;
+  }
+  .hero-tagline {
+    font-size: 17px;
+    margin-top: 2px;
+  }
+  .mode-card {
+    min-height: 172px;
+  }
+  .mode-art {
+    height: 92px;
+  }
+  .question-card .question {
+    font-size: clamp(21px, 6vw, 26px);
+  }
+  .cover-head h1 {
+    font-size: 23px;
+  }
+  .sealed-label {
+    bottom: 44px;
+    font-size: 17px;
+  }
+  .sealed-hint {
+    bottom: 18px;
+  }
+  .seat {
+    min-height: 100px;
+  }
+  .progress-ring {
+    width: 136px;
+    height: 136px;
+  }
+  .reveal-title {
+    font-size: 34px;
+  }
+  .impostor-card {
+    padding: 12px 14px;
+    gap: 9px;
+  }
+  .handoff-stage h1,
+  .status-stage h1 {
+    font-size: 27px;
+  }
+  .code-tiles span {
+    height: 54px;
+    font-size: 26px;
+  }
+  .category-chip {
+    min-height: 42px;
+  }
+  [data-view="setup-1"] .heading .kicker {
+    display: none;
+  }
+  .category-emoji {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+  .impostor-picker button {
+    min-height: 58px;
+    gap: 3px;
+  }
+  .setup-scroll {
+    gap: 12px;
+    padding-bottom: 4px;
+  }
+  .setup-summary {
+    margin-top: 6px;
+  }
+  .screen-setup .screen-body {
+    gap: 8px;
+  }
+  .impostor-faces {
+    height: 26px;
+  }
+  .category-grid {
+    gap: 6px;
+  }
+  .field-group {
+    gap: 8px;
+  }
+  .count-rail button {
+    height: 38px;
+  }
+  .action-dock {
+    padding-top: 8px;
+  }
+}
+@media (max-height: 600px) {
+  .top-bar {
+    height: 48px;
+  }
+  .heading p,
+  .cover-head p {
+    display: none;
+  }
+  .hero-stage {
+    height: 84px;
+  }
+  .hero-mascot {
+    width: 96px;
+    height: 80px;
+  }
+  .float-q,
+  .float-spark {
+    display: none;
+  }
+  .wordmark {
+    font-size: 36px;
+  }
+  .mode-card {
+    min-height: 150px;
+    padding: 10px 12px 12px;
+  }
+  .mode-art {
+    height: 80px;
+    transform: scale(0.85);
+    transform-origin: 50% 0;
+  }
+  .mode-text strong {
+    font-size: 19px;
+  }
+  .mode-text small {
+    font-size: 12px;
+  }
+  .btn {
+    min-height: 52px;
+  }
+  .btn-face {
+    min-height: 47px;
+  }
+  .action-dock .back-btn,
+  .action-dock .hide-btn {
+    width: 52px;
+    height: 52px;
+  }
+  .original-banner .question {
+    font-size: 18px;
+  }
+  .answer-card .avatar,
+  .answer-card .avatar svg {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .answer-bubble p {
+    font-size: 15px;
+  }
+  .ticket-hint {
+    display: none;
+  }
+  .room-code span {
+    width: 32px;
+    height: 40px;
+    font-size: 22px;
+  }
+  .reveal-title {
+    font-size: 30px;
+  }
+  .normal-bubble p,
+  .revealed-question {
+    font-size: 16px;
+  }
+  .impostor-avatar,
+  .impostor-avatar svg {
+    width: 56px !important;
+    height: 56px !important;
+  }
+  .impostor-head h2 {
+    font-size: 23px;
+  }
+  .variation-hint,
+  .lineup,
+  .reveal-spotlight {
+    display: none;
+  }
+  .impostor-card {
+    padding: 10px 12px;
+    gap: 7px;
+    border-radius: 22px;
+  }
+  .their-bubble,
+  .normal-bubble {
+    padding: 7px 12px 9px;
+  }
+  .screen-reveal .heading .kicker {
+    display: none;
+  }
+  .progress-ring {
+    width: 112px;
+    height: 112px;
+  }
+  .progress-ring .mascot {
+    width: 70px;
+    height: 58px;
+  }
+  .name-card .avatar,
+  .name-card .avatar svg {
+    width: 46px !important;
+    height: 46px !important;
+  }
+  .sealed-mascot .mascot {
+    width: 92px;
+    height: 77px;
+  }
+  .seal {
+    width: 62px;
+    height: 62px;
+  }
+  .category-chip {
+    min-height: 42px;
+    font-size: 12.5px;
+  }
+}
+@media (max-width: 350px) {
+  :root {
+    --gutter: 12px;
+  }
+  .home-facts {
+    display: none;
+  }
+  .home-foot {
+    justify-content: center;
+  }
+  .mode-art {
+    transform: scale(0.78);
+    transform-origin: 50% 0;
+  }
+  .mode-card {
+    padding: 10px 10px 12px;
+  }
+  .mode-text small {
+    padding-right: 22px;
+  }
+  .mode-go {
+    width: 26px;
+    height: 26px;
+    right: 8px;
+  }
+  .wordmark {
+    font-size: 38px;
+  }
+  .mode-text strong {
+    font-size: 18px;
+  }
+  .room-code span {
+    width: 30px;
+  }
+  .code-tiles {
+    gap: 5px;
+  }
+  .category-chip {
+    padding-right: 26px;
+    font-size: 12px;
+  }
+  .count-rail {
+    gap: 3px;
+    padding: 4px;
+  }
+  .count-rail button {
+    font-size: 16px;
+  }
+  .impostor-picker {
+    gap: 6px;
+  }
+  .lang-toggle {
+    width: 84px;
+  }
+}
+/* Larger phones get a little more breathing room for hero art. */
+@media (min-height: 860px) {
+  .hero-stage {
+    height: 170px;
+  }
+  .hero-mascot {
+    width: 176px;
+    height: 147px;
+  }
+  .wordmark {
+    font-size: 56px;
+  }
+  .mode-card {
+    min-height: 214px;
+  }
+  .mode-art {
+    height: 120px;
+  }
+  .screen-body {
+    gap: 16px;
+  }
+}
+
+/* ---------- Reduced motion: everything settles instantly ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

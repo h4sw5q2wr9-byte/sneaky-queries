@@ -9,12 +9,7 @@ export async function fillLocalNames(
   names: string[],
   locale: Locale = "en",
 ) {
-  await page
-    .getByRole("combobox", {
-      name: text(locale, "localPlayerCount"),
-      exact: true,
-    })
-    .selectOption(String(names.length));
+  await pickCount(page, text(locale, "localPlayerCount"), names.length);
   for (let i = 0; i < names.length; i++) {
     await page
       .getByRole("textbox", {
@@ -27,6 +22,20 @@ export async function fillLocalNames(
         .getByRole("button", { name: text(locale, "nextPlayers"), exact: true })
         .click();
   }
+}
+export async function pickCount(page: Page, group: string, value: number) {
+  await page
+    .getByRole("radiogroup", { name: group, exact: true })
+    .getByRole("radio", { name: String(value), exact: true })
+    .click();
+}
+export async function pickLanguage(page: Page, locale: Locale) {
+  await page
+    .getByRole("radio", {
+      name: locale === "nl" ? "Nederlands" : "English",
+      exact: true,
+    })
+    .click();
 }
 export async function localOptions(page: Page, locale: Locale = "en") {
   await page
@@ -103,17 +112,27 @@ export async function submitPrivate(
     })
     .click();
 }
+export async function revealOnline(page: Page, locale: Locale = "en") {
+  await expect(
+    page.getByRole("heading", { name: text(locale, "onlineCoverTitle") }),
+  ).toBeVisible();
+  await expect(page.locator(".question")).toHaveCount(0);
+  await page
+    .getByRole("button", {
+      name: text(locale, "localRevealQuestion"),
+      exact: true,
+    })
+    .click();
+  await expect(page.locator(".question")).toBeVisible();
+  return (await page.locator(".question").textContent())!;
+}
 export async function createOnline(page: Page, nickname: string, capacity = 3) {
   await page.getByRole("button", { name: "Online party", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Create a party", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Create a party/ }).click();
   await page
     .getByRole("textbox", { name: "Your nickname", exact: true })
     .fill(nickname);
-  await page
-    .getByRole("combobox", { name: "Room size", exact: true })
-    .selectOption(String(capacity));
+  await pickCount(page, "Room size", capacity);
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await page
     .getByRole("button", { name: "Let’s get sneaky", exact: true })
@@ -140,7 +159,7 @@ export async function expectScreenFit(page: Page, allowInternalScroll = false) {
     const visible = (el: Element) => el.getClientRects().length > 0;
     const controls = Array.from(
       document.querySelectorAll<HTMLElement>(
-        ".action-dock button, .app-header select",
+        ".action-dock button, .top-bar button",
       ),
     ).filter(visible);
     return {
@@ -157,19 +176,23 @@ export async function expectScreenFit(page: Page, allowInternalScroll = false) {
         .map((el) => el.getAttribute("aria-label") || el.textContent),
       internal: Array.from(
         document.querySelectorAll<HTMLElement>(
-          ".scroll-region, .name-card-grid",
+          ".scroll-region, .name-card-grid, .screen-body",
         ),
       )
         .filter(visible)
         .filter((el) => el.scrollHeight > el.clientHeight + 3)
-        .map((el) => el.className),
+        .map((el) =>
+          [el.className, el.closest("[data-view]")?.getAttribute("data-view")]
+            .filter(Boolean)
+            .join(" @ "),
+        ),
     };
   });
   if (result.clippedActions.length) {
     await page.screenshot({ path: "test-results/clipped-actions.png" });
     console.log(
       await page
-        .locator(".question-screen, .question-panel, .action-dock, .manage")
+        .locator(".screen, .answer-layout, .action-dock")
         .evaluateAll((elements) =>
           elements.map((el) => ({
             class: el.className,
